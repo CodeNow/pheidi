@@ -1,0 +1,27 @@
+{
+  "name": "pheidi",
+  "version": "0.1.0",
+  "description": "Runnable notifications worker server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ponos",
+    "notifications"
+  ],
+  "author": "Anton Podviaznikov <anton@runnable.com> (http://runnable.com)",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "101": "^1.5.0",
+    "bluebird": "^3.3.4",
+    "error-cat": "^2.0.4",
+    "joi": "^8.0.5",
+    "loadenv": "^2.1.0",
+    "ponos": "^2.0.0",
+    "runnable-hermes": "^6.6.0"
+  },
+  "devDependencies": {
+    "standard": "^6.0.8"
+  }
+}
