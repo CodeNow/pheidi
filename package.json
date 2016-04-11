@@ -8,7 +8,8 @@
     "check-coverage": "istanbul check-coverage && echo 'Coverage check successful!'",
     "coverage": "NODE_ENV=test NODE_PATH=./lib istanbul cover ./node_modules/mocha/bin/_mocha -- $npm_package_options_mocha test/ && npm run check-coverage",
     "start": "NODE_PATH=./lib node index.js",
-    "test": "NODE_ENV=test NODE_PATH=./lib mocha $npm_package_options_mocha test/unit"
+    "unit": "NODE_ENV=test NODE_PATH=./lib mocha $npm_package_options_mocha test/unit",
+    "test": "npm run lint && npm run coverage"
   },
   "keywords": [
     "ponos",
