@@ -7,7 +7,6 @@ const ErrorCat = require('error-cat')
 const log = require('logger').child({ module: 'main' })
 const server = require('worker-server')
 
-
 server.start()
   .then(() => {
     log.info('Pheidi Worker Server Started')

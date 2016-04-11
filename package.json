@@ -4,6 +4,7 @@
   "description": "Runnable notifications worker server",
   "main": "index.js",
   "scripts": {
+    "lint": "standard --verbose",
     "start": "NODE_PATH=./lib node index.js",
     "test": "NODE_ENV=test NODE_PATH=./lib mocha $npm_package_options_mocha test/unit"
   },
@@ -13,6 +14,16 @@
   ],
   "options": {
     "mocha": "--timeout 5000 --bail --recursive --reporter spec"
+  },
+  "standard": {
+    "globals": [
+      "describe",
+      "it",
+      "before",
+      "after",
+      "beforeEach",
+      "afterEach"
+    ]
   },
   "author": "Anton Podviaznikov <anton@runnable.com> (http://runnable.com)",
   "license": "UNLICENSED",
