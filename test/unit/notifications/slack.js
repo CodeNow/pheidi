@@ -9,10 +9,7 @@ const sinon = require('sinon')
 
 const Slack = require('notifications/slack')
 
-const path = require('path')
-const moduleName = path.relative(process.cwd(), __filename)
-
-describe('Slack: ' + moduleName, function () {
+describe('Slack', function () {
   before(function (done) {
     process.env.ENABLE_SLACK_MESSAGES = 'true'
     done()
