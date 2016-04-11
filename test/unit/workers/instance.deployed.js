@@ -12,14 +12,8 @@ require('sinon-as-promised')(Promise)
 
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
-
-
-
-// var ContextVersion = require('models/mongo/context-version')
-// var Instance = require('models/mongo/instance')
-// var PullRequest = require('models/apis/pullrequest')
-// var Slack = require('notifications/index')
-// var User = require('models/mongo/user')
+var PullRequest = require('models/pullrequest')
+var Slack = require('notifications/slack')
 var Worker = require('workers/instance.deployed')
 
 describe('Instance Deployed Worker', function () {
@@ -94,9 +88,9 @@ describe('Instance Deployed Worker', function () {
       sinon.stub(Mongo.prototype, 'findOneUserAsync').rejects(new Error('define behavior'))
       Mongo.prototype.findOneUserAsync.withArgs(pushUserId).resolves(mockPushUser)
       Mongo.prototype.findOneUserAsync.withArgs(instanceCreatedById).resolves(mockInstanceUser)
-      // sinon.stub(Slack, 'sendSlackDeployNotification')
-      // sinon.createStubInstance(PullRequest)
-      // sinon.stub(PullRequest.prototype, 'deploymentSucceeded')
+      sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
+      sinon.createStubInstance(PullRequest)
+      sinon.stub(PullRequest.prototype, 'deploymentSucceeded')
       done()
     })
 
@@ -104,9 +98,8 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneInstanceAsync.restore()
       Mongo.prototype.findOneContextVersionAsync.restore()
       Mongo.prototype.findOneUserAsync.restore()
-
-      // Slack.sendSlackDeployNotification.restore()
-      // PullRequest.prototype.deploymentSucceeded.restore()
+      Slack.prototype.notifyOnAutoDeploy.restore()
+      PullRequest.prototype.deploymentSucceeded.restore()
       done()
     })
 
