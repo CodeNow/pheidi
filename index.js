@@ -4,8 +4,8 @@ require('loadenv')()
 
 const CriticalError = require('error-cat/errors/critical-error')
 const ErrorCat = require('error-cat')
-const log = require('./lib/logger').child({ module: 'main' })
-const server = require('./lib/worker-server')
+const log = require('logger').child({ module: 'main' })
+const server = require('worker-server')
 
 
 server.start()
