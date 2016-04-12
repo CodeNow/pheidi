@@ -324,6 +324,14 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+      it('should not call slack notification if settings was not found', function (done) {
+        Mongo.prototype.findOneSettingAsync.returns(null)
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(Slack.prototype.notifyOnAutoDeploy)
+          done()
+        })
+      })
       it('should perform all these tasks in order', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
