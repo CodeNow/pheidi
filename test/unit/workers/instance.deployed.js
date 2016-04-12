@@ -92,6 +92,8 @@ describe('Instance Deployed Worker', function () {
       }
     }
     beforeEach(function (done) {
+      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
       sinon.stub(Mongo.prototype, 'findOneInstanceAsync').resolves(testInstance)
       sinon.stub(Mongo.prototype, 'findOneContextVersionAsync').resolves(testCv)
       sinon.stub(Mongo.prototype, 'findOneSettingAsync').resolves(testSettings)
@@ -105,6 +107,8 @@ describe('Instance Deployed Worker', function () {
     })
 
     afterEach(function (done) {
+      Mongo.prototype.connect.restore()
+      Mongo.prototype.close.restore()
       Mongo.prototype.findOneInstanceAsync.restore()
       Mongo.prototype.findOneContextVersionAsync.restore()
       Mongo.prototype.findOneSettingAsync.restore()
