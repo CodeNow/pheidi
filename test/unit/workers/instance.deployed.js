@@ -28,7 +28,16 @@ describe('Instance Deployed Worker', function () {
     }
     var mockInstanceUser = { accounts: { github: { accessToken: 'instanceUserGithubToken' } } }
     var mockPushUser = { accounts: { github: { accessToken: 'pushUserGithubToken', username: 'anton' } } }
-
+    var testSettings = {
+      notifications: {
+        slack: {
+          apiToken: 'slack-token',
+          githubUsernameToSlackIdMap: {
+            'anton': 123
+          }
+        }
+      }
+    }
     var testInstance = {
       _id: testInstanceId,
       name: 'name1',
@@ -81,13 +90,13 @@ describe('Instance Deployed Worker', function () {
         }
       }
     }
-
     beforeEach(function (done) {
       sinon.stub(Mongo.prototype, 'findOneInstanceAsync').resolves(testInstance)
       sinon.stub(Mongo.prototype, 'findOneContextVersionAsync').resolves(testCv)
+      sinon.stub(Mongo.prototype, 'findOneSettingAsync').resolves(testSettings)
       sinon.stub(Mongo.prototype, 'findOneUserAsync').rejects(new Error('define behavior'))
-      Mongo.prototype.findOneUserAsync.withArgs(pushUserId).resolves(mockPushUser)
-      Mongo.prototype.findOneUserAsync.withArgs(instanceCreatedById).resolves(mockInstanceUser)
+      Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).resolves(mockPushUser)
+      Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).resolves(mockInstanceUser)
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
       sinon.createStubInstance(PullRequest)
       sinon.stub(PullRequest.prototype, 'deploymentSucceeded')
@@ -97,6 +106,7 @@ describe('Instance Deployed Worker', function () {
     afterEach(function (done) {
       Mongo.prototype.findOneInstanceAsync.restore()
       Mongo.prototype.findOneContextVersionAsync.restore()
+      Mongo.prototype.findOneSettingAsync.restore()
       Mongo.prototype.findOneUserAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
       PullRequest.prototype.deploymentSucceeded.restore()
@@ -207,107 +217,127 @@ describe('Instance Deployed Worker', function () {
             done()
           })
         })
-      //
-      //   it('should return an error if instanceUser lookup failed', function (done) {
-      //     var mongoError = new Error('Mongo failed')
-      //     User.findByGithubIdAsync.withArgs(instanceCreatedById).rejects(mongoError)
-      //
-      //     Worker(testData).asCallback(function (err) {
-      //       expect(err).to.exist()
-      //       expect(err).to.equal(mongoError)
-      //       done()
-      //     })
-      //   })
-      //
-      //   it('should return an error if pushUser lookup failed', function (done) {
-      //     var mongoError = new Error('Mongo failed')
-      //     User.findByGithubIdAsync.withArgs(pushUserId).rejects(mongoError)
-      //
-      //     Worker(testData).asCallback(function (err) {
-      //       expect(err).to.exist()
-      //       expect(err).to.equal(mongoError)
-      //       done()
-      //     })
-      //   })
-      //
-      //   it('should reject instanceUser was not found', function (done) {
-      //     User.findByGithubIdAsync.withArgs(instanceCreatedById).returns(null)
-      //
-      //     Worker(testData).asCallback(function (err) {
-      //       expect(err).to.exist()
-      //       expect(err).to.be.instanceOf(TaskFatalError)
-      //       expect(err.message).to.match(/Instance creator not found/i)
-      //       done()
-      //     })
-      //   })
+
+        it('should return an error if instanceUser lookup failed', function (done) {
+          var mongoError = new Error('Mongo failed')
+          Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).rejects(mongoError)
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.equal(err, mongoError)
+            done()
+          })
+        })
+
+        it('should return an error if pushUser lookup failed', function (done) {
+          var mongoError = new Error('Mongo failed')
+          Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).rejects(mongoError)
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.equal(err, mongoError)
+            done()
+          })
+        })
+
+        it('should return an error if settings lookup failed', function (done) {
+          var mongoError = new Error('Mongo failed')
+          Mongo.prototype.findOneSettingAsync.rejects(mongoError)
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.equal(err, mongoError)
+            done()
+          })
+        })
+
+        it('should reject instanceUser was not found', function (done) {
+          Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).returns(null)
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.instanceOf(err, TaskFatalError)
+            assert.match(err.message, /Instance creator not found/i)
+            done()
+          })
+        })
       })
-      // it('should find an instance', function (done) {
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.calledOnce(Instance.findByIdAsync)
-      //     sinon.assert.calledWith(Instance.findByIdAsync, testInstanceId)
-      //     done()
-      //   })
-      // })
-      // it('should find a cv', function (done) {
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.calledOnce(ContextVersion.findByIdAsync)
-      //     sinon.assert.calledWith(ContextVersion.findByIdAsync, testCvId)
-      //     done()
-      //   })
-      // })
-      // it('should find two users', function (done) {
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.calledTwice(User.findByGithubIdAsync)
-      //     sinon.assert.calledWith(User.findByGithubIdAsync, instanceCreatedById)
-      //     sinon.assert.calledWith(User.findByGithubIdAsync, pushUserId)
-      //     done()
-      //   })
-      // })
-      // it('should call slack notification', function (done) {
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.calledOnce(Slack.sendSlackDeployNotification)
-      //     sinon.assert.calledWith(Slack.sendSlackDeployNotification,
-      //       testCv.build.triggeredAction.appCodeVersion,
-      //       mockPushUser.accounts.github.username,
-      //       testInstance)
-      //     done()
-      //   })
-      // })
-      // it('should call pull request notification', function (done) {
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.calledOnce(PullRequest.prototype.deploymentSucceeded)
-      //     sinon.assert.calledWith(PullRequest.prototype.deploymentSucceeded,
-      //       testCv.build.triggeredAction.appCodeVersion,
-      //       testInstance)
-      //     done()
-      //   })
-      // })
-      // it('should not call slack notification if pushUser was not found', function (done) {
-      //   User.findByGithubIdAsync.withArgs(pushUserId).returns(null)
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.notCalled(Slack.sendSlackDeployNotification)
-      //     done()
-      //   })
-      // })
-      // it('should perform all these tasks in order', function (done) {
-      //   Worker(testData).asCallback(function (err) {
-      //     expect(err).to.not.exist()
-      //     sinon.assert.callOrder(
-      //       Instance.findByIdAsync,
-      //       ContextVersion.findByIdAsync,
-      //       User.findByGithubIdAsync,
-      //       Slack.sendSlackDeployNotification,
-      //       PullRequest.prototype.deploymentSucceeded
-      //     )
-      //     done()
-      //   })
-      // })
+      it('should find an instance', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(Mongo.prototype.findOneInstanceAsync)
+          sinon.assert.calledWith(Mongo.prototype.findOneInstanceAsync, { _id: testInstanceId })
+          done()
+        })
+      })
+      it('should find a cv', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(Mongo.prototype.findOneContextVersionAsync)
+          sinon.assert.calledWith(Mongo.prototype.findOneContextVersionAsync, { _id: testCvId })
+          done()
+        })
+      })
+      it('should find two users', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledTwice(Mongo.prototype.findOneUserAsync)
+          sinon.assert.calledWith(Mongo.prototype.findOneUserAsync, { 'accounts.github.id': instanceCreatedById })
+          sinon.assert.calledWith(Mongo.prototype.findOneUserAsync, { 'accounts.github.id': pushUserId })
+          done()
+        })
+      })
+      it('should find settings', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(Mongo.prototype.findOneSettingAsync)
+          sinon.assert.calledWith(Mongo.prototype.findOneSettingAsync, { 'owner.github': testInstance.owner.github })
+          done()
+        })
+      })
+      it('should call slack notification', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(Slack.prototype.notifyOnAutoDeploy)
+          sinon.assert.calledWith(Slack.prototype.notifyOnAutoDeploy,
+            testCv.build.triggeredAction.appCodeVersion,
+            mockPushUser.accounts.github.username,
+            testInstance)
+          done()
+        })
+      })
+      it('should call pull request notification', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(PullRequest.prototype.deploymentSucceeded)
+          sinon.assert.calledWith(PullRequest.prototype.deploymentSucceeded,
+            testCv.build.triggeredAction.appCodeVersion,
+            testInstance)
+          done()
+        })
+      })
+      it('should not call slack notification if pushUser was not found', function (done) {
+        Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).returns(null)
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(Slack.prototype.notifyOnAutoDeploy)
+          done()
+        })
+      })
+      it('should perform all these tasks in order', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.callOrder(
+            Mongo.prototype.findOneInstanceAsync,
+            Mongo.prototype.findOneContextVersionAsync,
+            Mongo.prototype.findOneUserAsync,
+            Mongo.prototype.findOneSettingAsync,
+            Slack.prototype.notifyOnAutoDeploy,
+            PullRequest.prototype.deploymentSucceeded
+          )
+          done()
+        })
+      })
     })
   })
 })
