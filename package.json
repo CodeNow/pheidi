@@ -15,6 +15,14 @@
     "ponos",
     "notifications"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeNow/pheidi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CodeNow/pheidi/issues"
+  },
+  "homepage": "https://github.com/CodeNow/pheidi#readme",
   "options": {
     "mocha": "--timeout 5000 --bail --recursive --reporter spec"
   },
@@ -36,7 +44,7 @@
     "bunyan": "^1.8.0",
     "defaults": "^1.0.3",
     "error-cat": "^2.0.4",
-    "github": "git+ssh://git@github.com/podviaznikov/node-github.git#66dc2d069c59585cc166d87472fb22f7573f9ff5",
+    "github": "git+https://git@github.com/podviaznikov/node-github.git#66dc2d069c59585cc166d87472fb22f7573f9ff5",
     "joi": "^8.0.5",
     "keypather": "^2.0.0",
     "loadenv": "^2.1.0",
