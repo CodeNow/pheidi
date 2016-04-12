@@ -10,6 +10,7 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
+const ObjectID = require('mongodb').ObjectID
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
 var PullRequest = require('models/pullrequest')
@@ -266,7 +267,7 @@ describe('Instance Deployed Worker', function () {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
           sinon.assert.calledOnce(Mongo.prototype.findOneInstanceAsync)
-          sinon.assert.calledWith(Mongo.prototype.findOneInstanceAsync, { _id: testInstanceId })
+          sinon.assert.calledWith(Mongo.prototype.findOneInstanceAsync, { _id: new ObjectID(testInstanceId) })
           done()
         })
       })
@@ -274,7 +275,7 @@ describe('Instance Deployed Worker', function () {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
           sinon.assert.calledOnce(Mongo.prototype.findOneContextVersionAsync)
-          sinon.assert.calledWith(Mongo.prototype.findOneContextVersionAsync, { _id: testCvId })
+          sinon.assert.calledWith(Mongo.prototype.findOneContextVersionAsync, { _id: new ObjectID(testCvId) })
           done()
         })
       })
