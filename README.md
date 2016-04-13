@@ -8,7 +8,7 @@ messenger who died after running Marathon to deliver message about Greek victory
 
 ## Mission
 
-Pheidi is responsible for sending all kind of notifications from RUnnable to 3d party systems.
+Pheidi is a Ponos worker-sever responsible for sending all kind of notifications from Runnable to 3d party systems.
 
 Currenly there is intgeration with Slack and GitHub Pull Requests. In the long-term we can have other providers: email, hipchat etc.
 
