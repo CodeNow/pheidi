@@ -18,4 +18,4 @@ Pheidi subscribed to the `instance.deployed` event (fired by API). Upon recievin
 
  - deliver message to the Slack that context version was deployed to the instance
  - deliver message deploy message to the GitHub PR page that context version was deployed to the instance
- - [COMING SOON] deliver @runnabot message on the GitHub PR page using PR comments that context version was deployed to the instance
+ - *COMING SOON* deliver @runnabot message on the GitHub PR page using PR comments that context version was deployed to the instance
