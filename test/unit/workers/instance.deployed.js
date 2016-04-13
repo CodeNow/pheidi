@@ -13,23 +13,23 @@ require('sinon-as-promised')(Promise)
 const ObjectID = require('mongodb').ObjectID
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
-var PullRequest = require('models/pullrequest')
-var Slack = require('notifications/slack')
-var Worker = require('workers/instance.deployed')
+const GitHubDeploy = require('notifications/github.deploy')
+const Slack = require('notifications/slack')
+const Worker = require('workers/instance.deployed')
 
 describe('Instance Deployed Worker', function () {
   describe('worker', function () {
-    var testInstanceId = '5633e9273e2b5b0c0077fd41'
-    var testCvId = '2933e9211e2bbb0c00888876'
-    var pushUserId = 123456
-    var instanceCreatedById = 125
-    var testData = {
+    const testInstanceId = '5633e9273e2b5b0c0077fd41'
+    const testCvId = '2933e9211e2bbb0c00888876'
+    const pushUserId = 123456
+    const instanceCreatedById = 125
+    const testData = {
       instanceId: testInstanceId,
       cvId: testCvId
     }
-    var mockInstanceUser = { accounts: { github: { accessToken: 'instanceUserGithubToken' } } }
-    var mockPushUser = { accounts: { github: { accessToken: 'pushUserGithubToken', username: 'anton' } } }
-    var testSettings = {
+    const mockInstanceUser = { accounts: { github: { accessToken: 'instanceUserGithubToken' } } }
+    const mockPushUser = { accounts: { github: { accessToken: 'pushUserGithubToken', username: 'anton' } } }
+    const testSettings = {
       notifications: {
         slack: {
           apiToken: 'slack-token',
@@ -39,7 +39,7 @@ describe('Instance Deployed Worker', function () {
         }
       }
     }
-    var testInstance = {
+    const testInstance = {
       _id: testInstanceId,
       name: 'name1',
       shortHash: 'asd51a1',
@@ -73,7 +73,7 @@ describe('Instance Deployed Worker', function () {
         ]
       }
     }
-    var testCv = {
+    const testCv = {
       _id: testCvId,
       createdBy: {
         github: pushUserId
@@ -101,8 +101,8 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).resolves(mockPushUser)
       Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).resolves(mockInstanceUser)
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
-      sinon.createStubInstance(PullRequest)
-      sinon.stub(PullRequest.prototype, 'deploymentSucceeded')
+      sinon.createStubInstance(GitHubDeploy)
+      sinon.stub(GitHubDeploy.prototype, 'deploymentSucceeded')
       done()
     })
 
@@ -114,7 +114,7 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneSettingAsync.restore()
       Mongo.prototype.findOneUserAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
-      PullRequest.prototype.deploymentSucceeded.restore()
+      GitHubDeploy.prototype.deploymentSucceeded.restore()
       done()
     })
 
@@ -180,7 +180,7 @@ describe('Instance Deployed Worker', function () {
       })
       describe('behavioral errors', function () {
         it('should reject with any instance search error', function (done) {
-          var mongoError = new Error('Mongo failed')
+          const mongoError = new Error('Mongo failed')
           Mongo.prototype.findOneInstanceAsync.rejects(mongoError)
 
           Worker(testData).asCallback(function (err) {
@@ -191,7 +191,7 @@ describe('Instance Deployed Worker', function () {
         })
 
         it('should reject with any cv search error', function (done) {
-          var mongoError = new Error('Mongo failed')
+          const mongoError = new Error('Mongo failed')
           Mongo.prototype.findOneContextVersionAsync.rejects(mongoError)
 
           Worker(testData).asCallback(function (err) {
@@ -224,7 +224,7 @@ describe('Instance Deployed Worker', function () {
         })
 
         it('should return an error if instanceUser lookup failed', function (done) {
-          var mongoError = new Error('Mongo failed')
+          const mongoError = new Error('Mongo failed')
           Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).rejects(mongoError)
 
           Worker(testData).asCallback(function (err) {
@@ -235,7 +235,7 @@ describe('Instance Deployed Worker', function () {
         })
 
         it('should return an error if pushUser lookup failed', function (done) {
-          var mongoError = new Error('Mongo failed')
+          const mongoError = new Error('Mongo failed')
           Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).rejects(mongoError)
 
           Worker(testData).asCallback(function (err) {
@@ -246,7 +246,7 @@ describe('Instance Deployed Worker', function () {
         })
 
         it('should return an error if settings lookup failed', function (done) {
-          var mongoError = new Error('Mongo failed')
+          const mongoError = new Error('Mongo failed')
           Mongo.prototype.findOneSettingAsync.rejects(mongoError)
 
           Worker(testData).asCallback(function (err) {
@@ -314,8 +314,8 @@ describe('Instance Deployed Worker', function () {
       it('should call pull request notification', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.calledOnce(PullRequest.prototype.deploymentSucceeded)
-          sinon.assert.calledWith(PullRequest.prototype.deploymentSucceeded,
+          sinon.assert.calledOnce(GitHubDeploy.prototype.deploymentSucceeded)
+          sinon.assert.calledWith(GitHubDeploy.prototype.deploymentSucceeded,
             testCv.build.triggeredAction.appCodeVersion,
             testInstance)
           done()
@@ -346,7 +346,7 @@ describe('Instance Deployed Worker', function () {
             Mongo.prototype.findOneUserAsync,
             Mongo.prototype.findOneSettingAsync,
             Slack.prototype.notifyOnAutoDeploy,
-            PullRequest.prototype.deploymentSucceeded
+            GitHubDeploy.prototype.deploymentSucceeded
           )
           done()
         })

@@ -9,7 +9,7 @@ const GitHubDeploy = require('notifications/github.deploy')
 const GitHub = require('models/github')
 
 describe('GitHubDeploy', function () {
-  var ctx = {}
+  const ctx = {}
   before(function (done) {
     ctx.originalStatusFlag = process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES
     process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = 'true'
@@ -31,11 +31,11 @@ describe('GitHubDeploy', function () {
         done()
       })
       it('should do nothing if statuses are disabled', function (done) {
-        var githubDeploy = new GitHubDeploy('anton-token')
-        var gitInfo = {
+        const githubDeploy = new GitHubDeploy('anton-token')
+        const gitInfo = {
           repo: 'codenow/hellonode'
         }
-        var instance = {
+        const instance = {
           name: 'inst-1',
           owner: {
             username: 'codenow'
@@ -50,11 +50,11 @@ describe('GitHubDeploy', function () {
       })
     })
     it('should fail if deploymentId is null', function (done) {
-      var githubDeploy = new GitHubDeploy('anton-token')
-      var gitInfo = {
+      const githubDeploy = new GitHubDeploy('anton-token')
+      const gitInfo = {
         repo: 'codenow/hellonode'
       }
-      var instance = {
+      const instance = {
         name: 'inst-1',
         owner: {
           username: 'codenow'
@@ -71,11 +71,11 @@ describe('GitHubDeploy', function () {
 
   describe('#deploymentSucceeded', function () {
     it('should call github method with correct payload', function (done) {
-      var githubDeploy = new GitHubDeploy('anton-token')
-      var gitInfo = {
+      const githubDeploy = new GitHubDeploy('anton-token')
+      const gitInfo = {
         repo: 'codenow/hellonode'
       }
-      var instance = {
+      const instance = {
         name: 'inst-1',
         owner: {
           username: 'codenow'
@@ -99,7 +99,7 @@ describe('GitHubDeploy', function () {
   })
 
   describe('#createDeployment', function () {
-    var ctx = {}
+    const ctx = {}
     before(function (done) {
       ctx.originalFlag = process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES
       process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = 'true'
@@ -110,8 +110,8 @@ describe('GitHubDeploy', function () {
       done()
     })
     it('should call github method with correct payload', function (done) {
-      var githubDeploy = new GitHubDeploy('anton-token')
-      var gitInfo = {
+      const githubDeploy = new GitHubDeploy('anton-token')
+      const gitInfo = {
         repo: 'codenow/hellonode',
         commit: 'somecommitsha'
       }
