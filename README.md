@@ -14,7 +14,8 @@ Currenly there is intgeration with Slack and GitHub Pull Requests. In the long-t
 
 ## Flow
 
-Pheidi subscribed to the `instance.deployed` event (fired by API). Upon recieving this event Pheidi will try to 
+Pheidi subscribed to the `instance.deployed` event (fired by API). Upon recieving this event Pheidi will try to: 
 
  - deliver message to the Slack that context version was deployed to the instance
  - deliver message deploy message to the GitHub PR page that context version was deployed to the instance
+ - [COMING SOON] deliver @runnabot message on the GitHub PR page using PR comments that context version was deployed to the instacne
