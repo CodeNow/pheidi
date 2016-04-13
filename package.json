@@ -44,7 +44,7 @@
     "bunyan": "^1.8.0",
     "defaults": "^1.0.3",
     "error-cat": "^2.0.4",
-    "github": "git+https://git@github.com/podviaznikov/node-github.git#66dc2d069c59585cc166d87472fb22f7573f9ff5",
+    "github": "^0.2.4",
     "joi": "^8.0.5",
     "keypather": "^2.0.0",
     "loadenv": "^2.1.0",
