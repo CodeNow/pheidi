@@ -12,9 +12,10 @@ Pheidi is a Ponos worker-sever responsible for sending all kind of notifications
 
 Currenly there is intgeration with Slack and GitHub Pull Requests. In the long-term we can have other providers: email, hipchat etc.
 
+
 ## Flow
 
-Pheidi subscribed to the `instance.deployed` event (fired by API). Upon recieving this event Pheidi will try to: 
+Pheidi subscribed to the `instance.deployed` event (fired by API). Upon recieving this event Pheidi will try to:
 
  - deliver message to the Slack that context version was deployed to the instance
  - deliver message deploy message to the GitHub PR page that context version was deployed to the instance
