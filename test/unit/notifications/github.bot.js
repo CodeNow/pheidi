@@ -3,6 +3,7 @@
 const chai = require('chai')
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
+const clone = require('101/clone')
 const sinon = require('sinon')
 const GitHubBot = require('notifications/github.bot')
 const GitHub = require('models/github')
@@ -192,6 +193,211 @@ describe('GitHubBot', function () {
         sinon.assert.notCalled(GitHub.prototype.updateComment)
         done()
       })
+    })
+  })
+  describe('#upsertComments', function () {
+    beforeEach(function (done) {
+      sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranch').yieldsAsync(null, [
+        {
+          number: 1
+        },
+        {
+          number: 2
+        }
+      ])
+      sinon.stub(GitHubBot.prototype, 'upsertComment').yieldsAsync(null)
+      done()
+    })
+    afterEach(function (done) {
+      GitHub.prototype.listOpenPullRequestsForBranch.restore()
+      GitHubBot.prototype.upsertComment.restore()
+      done()
+    })
+    it('should fail if fetching prs failed', function (done) {
+      var githubError = new Error('GitHub error')
+      GitHub.prototype.listOpenPullRequestsForBranch.yieldsAsync(githubError)
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot.upsertComments(gitInfo, instance, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, githubError)
+        done()
+      })
+    })
+    it('should fail if upserting comment failed', function (done) {
+      var githubError = new Error('GitHub error')
+      GitHubBot.prototype.upsertComment.yieldsAsync(githubError)
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot.upsertComments(gitInfo, instance, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, githubError)
+        done()
+      })
+    })
+    it('should upsert 2 comments to two prs', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot.upsertComments(gitInfo, instance, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
+        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
+          gitInfo.repo,
+          gitInfo.branch,
+          sinon.match.func)
+        sinon.assert.calledTwice(GitHubBot.prototype.upsertComment)
+        const pushInfo1 = clone(gitInfo)
+        pushInfo1.number = 1
+        const pushInfo2 = clone(gitInfo)
+        pushInfo2.number = 2
+        sinon.assert.calledWith(GitHubBot.prototype.upsertComment,
+          pushInfo1, instance, sinon.match.func)
+        sinon.assert.calledWith(GitHubBot.prototype.upsertComment,
+          pushInfo2, instance, sinon.match.func)
+        done()
+      })
+    })
+  })
+  describe('#notifyOnAutoDeploy', function () {
+    beforeEach(function (done) {
+      sinon.stub(GitHub.prototype, 'acceptInvitation').yieldsAsync(null)
+      sinon.stub(GitHubBot.prototype, 'upsertComments').yieldsAsync(null)
+      done()
+    })
+    afterEach(function (done) {
+      GitHub.prototype.acceptInvitation.restore()
+      GitHubBot.prototype.upsertComments.restore()
+      done()
+    })
+    it('should fail if accept invitation failed', function (done) {
+      var githubError = new Error('GitHub error')
+      GitHub.prototype.acceptInvitation.yieldsAsync(githubError)
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, githubError)
+        done()
+      })
+    })
+    it('should fail if upserting comments failed', function (done) {
+      var githubError = new Error('GitHub error')
+      GitHubBot.prototype.upsertComments.yieldsAsync(githubError)
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, githubError)
+        done()
+      })
+    })
+    it('should work without errors', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
+        sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
+          instance.owner.username,
+          sinon.match.func)
+        sinon.assert.calledOnce(GitHubBot.prototype.upsertComments)
+        sinon.assert.calledWith(GitHubBot.prototype.upsertComments,
+          gitInfo, instance, sinon.match.func)
+        done()
+      })
+    })
+  })
+  describe('#_render', function () {
+    it('should return message with one link', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
+      done()
     })
   })
 })
