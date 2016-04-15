@@ -10,15 +10,7 @@ const GitHub = require('models/github')
 
 describe('GitHubDeploy', function () {
   const ctx = {}
-  before(function (done) {
-    ctx.originalStatusFlag = process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES
-    process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = 'true'
-    done()
-  })
-  after(function (done) {
-    process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = ctx.originalStatusFlag
-    done()
-  })
+
   describe('#_deploymentStatus', function () {
     describe('disabled statuses', function () {
       before(function (done) {
@@ -26,10 +18,12 @@ describe('GitHubDeploy', function () {
         process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = 'false'
         done()
       })
+
       after(function (done) {
         process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = ctx.originalStatusFlag
         done()
       })
+
       it('should do nothing if statuses are disabled', function (done) {
         const githubDeploy = new GitHubDeploy('anton-token')
         const gitInfo = {
@@ -49,6 +43,7 @@ describe('GitHubDeploy', function () {
           })
       })
     })
+
     it('should fail if deploymentId is null', function (done) {
       const githubDeploy = new GitHubDeploy('anton-token')
       const gitInfo = {
@@ -105,10 +100,12 @@ describe('GitHubDeploy', function () {
       process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = 'true'
       done()
     })
+
     after(function (done) {
       process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = ctx.originalFlag
       done()
     })
+
     it('should call github method with correct payload', function (done) {
       const githubDeploy = new GitHubDeploy('anton-token')
       const gitInfo = {

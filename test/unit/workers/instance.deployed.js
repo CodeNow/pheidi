@@ -10,10 +10,12 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
+const clone = require('101/clone')
 const ObjectID = require('mongodb').ObjectID
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
 const GitHubDeploy = require('notifications/github.deploy')
+const GitHubBot = require('notifications/github.bot')
 const Slack = require('notifications/slack')
 const Worker = require('workers/instance.deployed')
 
@@ -45,7 +47,7 @@ describe('Instance Deployed Worker', function () {
       shortHash: 'asd51a1',
       masterPod: true,
       owner: {
-        github: 124,
+        github: 2828361,
         username: 'codenow',
         gravatar: ''
       },
@@ -103,6 +105,7 @@ describe('Instance Deployed Worker', function () {
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
       sinon.createStubInstance(GitHubDeploy)
       sinon.stub(GitHubDeploy.prototype, 'deploymentSucceeded')
+      sinon.stub(GitHubBot.prototype, 'notifyOnAutoDeploy')
       done()
     })
 
@@ -115,6 +118,7 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneUserAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
       GitHubDeploy.prototype.deploymentSucceeded.restore()
+      GitHubBot.prototype.notifyOnAutoDeploy.restore()
       done()
     })
 
@@ -307,7 +311,8 @@ describe('Instance Deployed Worker', function () {
           sinon.assert.calledWith(Slack.prototype.notifyOnAutoDeploy,
             testCv.build.triggeredAction.appCodeVersion,
             mockPushUser.accounts.github.username,
-            testInstance)
+            testInstance,
+            sinon.match.func)
           done()
         })
       })
@@ -318,6 +323,27 @@ describe('Instance Deployed Worker', function () {
           sinon.assert.calledWith(GitHubDeploy.prototype.deploymentSucceeded,
             testCv.build.triggeredAction.appCodeVersion,
             testInstance)
+          done()
+        })
+      })
+      it('should call bot notification', function (done) {
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnAutoDeploy)
+          sinon.assert.calledWith(GitHubBot.prototype.notifyOnAutoDeploy,
+            testCv.build.triggeredAction.appCodeVersion,
+            testInstance,
+            sinon.match.func)
+          done()
+        })
+      })
+      it('should not call bot if org is not whtelisted', function (done) {
+        const instance = clone(testInstance)
+        instance.owner.github = 123123812312938
+        Mongo.prototype.findOneInstanceAsync.resolves(instance)
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(GitHubBot.prototype.notifyOnAutoDeploy)
           done()
         })
       })
@@ -346,7 +372,8 @@ describe('Instance Deployed Worker', function () {
             Mongo.prototype.findOneUserAsync,
             Mongo.prototype.findOneSettingAsync,
             Slack.prototype.notifyOnAutoDeploy,
-            GitHubDeploy.prototype.deploymentSucceeded
+            GitHubDeploy.prototype.deploymentSucceeded,
+            GitHubBot.prototype.notifyOnAutoDeploy
           )
           done()
         })

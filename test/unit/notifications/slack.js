@@ -10,24 +10,18 @@ const sinon = require('sinon')
 const Slack = require('notifications/slack')
 
 describe('Slack', function () {
-  before(function (done) {
-    process.env.ENABLE_SLACK_MESSAGES = 'true'
-    done()
-  })
-  after(function (done) {
-    process.env.ENABLE_SLACK_MESSAGES = 'false'
-    done()
-  })
   describe('#_canSendMessage', function () {
     describe('with setting disabled locally', function () {
       before(function (done) {
         process.env.ENABLE_SLACK_MESSAGES = 'false'
         done()
       })
+
       after(function (done) {
         process.env.ENABLE_SLACK_MESSAGES = 'true'
         done()
       })
+
       it('should return false if notifications are enabled', function (done) {
         var settings = {
           notifications: {
@@ -41,6 +35,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should return true if notifications are enabled', function (done) {
       var settings = {
         notifications: {
@@ -53,6 +48,7 @@ describe('Slack', function () {
       assert.isTrue(slack._canSendMessage())
       done()
     })
+
     it('should return true if notifications are disabled', function (done) {
       var settings = {
         notifications: {
@@ -83,6 +79,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should return err if slack client returned error', function (done) {
       var settings = {
         notifications: {
@@ -105,6 +102,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should send private message if user found', function (done) {
       var settings = {
         notifications: {
@@ -127,6 +125,7 @@ describe('Slack', function () {
       })
     })
   })
+
   describe('#notifyOnAutoDeploy', function () {
     it('should do nothing if slack messaging is disabled', function (done) {
       var slack = new Slack()
@@ -136,6 +135,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should do nothing if slack messaging is disabled in settings', function (done) {
       var settings = {
         notifications: {
@@ -151,6 +151,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should do nothing if instance = null', function (done) {
       var settings = {
         notifications: {
@@ -166,6 +167,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should do nothing if user was not found', function (done) {
       var settings = {
         notifications: {
@@ -188,6 +190,7 @@ describe('Slack', function () {
         done()
       })
     })
+
     it('should send direct message', function (done) {
       var settings = {
         notifications: {

@@ -1,5 +1,8 @@
 ## Pheidi
 
+![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
+
 ![Pheidi](https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Phidippides.jpg/220px-Phidippides.jpg)
 
 Pheidi stands for [Pheidippides](https://en.wikipedia.org/wiki/Pheidippides) -
@@ -10,7 +13,7 @@ messenger who died after running Marathon to deliver message about Greek victory
 
 Pheidi is a Ponos worker-sever responsible for sending all kind of notifications from Runnable to 3d party systems.
 
-Currenly there is intgeration with Slack and GitHub Pull Requests. In the long-term we can have other providers: email, hipchat etc.
+Currently there is integration with Slack and GitHub Pull Requests. In the long-term we can have other providers: email, hipchat etc.
 
 
 ## Flow
