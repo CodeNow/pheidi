@@ -10,12 +10,10 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
-const clone = require('101/clone')
 const ObjectID = require('mongodb').ObjectID
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
 const GitHubDeploy = require('notifications/github.deploy')
-const GitHubBot = require('notifications/github.bot')
 const Slack = require('notifications/slack')
 const Worker = require('workers/instance.deployed')
 
@@ -105,7 +103,6 @@ describe('Instance Deployed Worker', function () {
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
       sinon.createStubInstance(GitHubDeploy)
       sinon.stub(GitHubDeploy.prototype, 'deploymentSucceeded')
-      sinon.stub(GitHubBot.prototype, 'notifyOnUpdate')
       done()
     })
 
@@ -118,7 +115,6 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneUserAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
       GitHubDeploy.prototype.deploymentSucceeded.restore()
-      GitHubBot.prototype.notifyOnUpdate.restore()
       done()
     })
 
@@ -271,6 +267,7 @@ describe('Instance Deployed Worker', function () {
           })
         })
       })
+
       it('should find an instance', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -279,6 +276,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should find a cv', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -287,6 +285,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should find two users', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -296,6 +295,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should find settings', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -304,6 +304,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should call slack notification', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -316,6 +317,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should call pull request notification', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -326,27 +328,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
-      it('should call bot notification', function (done) {
-        Worker(testData).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdate)
-          sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdate,
-            testCv.build.triggeredAction.appCodeVersion,
-            testInstance,
-            sinon.match.func)
-          done()
-        })
-      })
-      it('should not call bot if org is not whtelisted', function (done) {
-        const instance = clone(testInstance)
-        instance.owner.github = 123123812312938
-        Mongo.prototype.findOneInstanceAsync.resolves(instance)
-        Worker(testData).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.notifyOnUpdate)
-          done()
-        })
-      })
+
       it('should not call slack notification if pushUser was not found', function (done) {
         Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).returns(null)
         Worker(testData).asCallback(function (err) {
@@ -355,6 +337,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should not call slack notification if settings was not found', function (done) {
         Mongo.prototype.findOneSettingAsync.returns(null)
         Worker(testData).asCallback(function (err) {
@@ -363,6 +346,7 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
+
       it('should perform all these tasks in order', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
@@ -372,8 +356,7 @@ describe('Instance Deployed Worker', function () {
             Mongo.prototype.findOneUserAsync,
             Mongo.prototype.findOneSettingAsync,
             Slack.prototype.notifyOnAutoDeploy,
-            GitHubDeploy.prototype.deploymentSucceeded,
-            GitHubBot.prototype.notifyOnUpdate
+            GitHubDeploy.prototype.deploymentSucceeded
           )
           done()
         })

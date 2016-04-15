@@ -60,7 +60,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -85,7 +86,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -107,7 +109,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -141,7 +144,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -179,7 +183,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -229,7 +234,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -253,7 +259,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -275,7 +282,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -333,7 +341,8 @@ describe('GitHubBot', function () {
         const gitInfo = {
           repo: 'codenow/hellonode',
           branch: 'feature-1',
-          number: 2
+          number: 2,
+          state: 'running'
         }
         const instance = {
           name: 'inst-1',
@@ -359,7 +368,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -383,7 +393,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -405,7 +416,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -434,7 +446,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
