@@ -10,7 +10,7 @@ const GitHub = require('models/github')
 
 describe('GitHubBot', function () {
   const ctx = {}
-  describe('#upsertComment', function () {
+  describe('#_upsertComment', function () {
     beforeEach(function (done) {
       ctx.comment = {
         body: 'PR-2 is deployed',
@@ -46,7 +46,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -70,7 +70,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -95,7 +95,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -117,7 +117,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
@@ -151,7 +151,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
@@ -189,7 +189,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
@@ -202,7 +202,7 @@ describe('GitHubBot', function () {
       })
     })
   })
-  describe('#upsertComments', function () {
+  describe('#_upsertComments', function () {
     beforeEach(function (done) {
       sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranch').yieldsAsync(null, [
         {
@@ -212,13 +212,13 @@ describe('GitHubBot', function () {
           number: 2
         }
       ])
-      sinon.stub(GitHubBot.prototype, 'upsertComment').yieldsAsync(null)
+      sinon.stub(GitHubBot.prototype, '_upsertComment').yieldsAsync(null)
       done()
     })
 
     afterEach(function (done) {
       GitHub.prototype.listOpenPullRequestsForBranch.restore()
-      GitHubBot.prototype.upsertComment.restore()
+      GitHubBot.prototype._upsertComment.restore()
       done()
     })
 
@@ -239,7 +239,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComments(gitInfo, instance, function (err) {
+      githubBot._upsertComments(gitInfo, instance, function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -248,7 +248,7 @@ describe('GitHubBot', function () {
 
     it('should fail if upserting comment failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHubBot.prototype.upsertComment.yieldsAsync(githubError)
+      GitHubBot.prototype._upsertComment.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -263,7 +263,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComments(gitInfo, instance, function (err) {
+      githubBot._upsertComments(gitInfo, instance, function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -285,21 +285,21 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.upsertComments(gitInfo, instance, function (err) {
+      githubBot._upsertComments(gitInfo, instance, function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
         sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
           gitInfo.repo,
           gitInfo.branch,
           sinon.match.func)
-        sinon.assert.calledTwice(GitHubBot.prototype.upsertComment)
+        sinon.assert.calledTwice(GitHubBot.prototype._upsertComment)
         const pushInfo1 = clone(gitInfo)
         pushInfo1.number = 1
         const pushInfo2 = clone(gitInfo)
         pushInfo2.number = 2
-        sinon.assert.calledWith(GitHubBot.prototype.upsertComment,
+        sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
           pushInfo1, instance, sinon.match.func)
-        sinon.assert.calledWith(GitHubBot.prototype.upsertComment,
+        sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
           pushInfo2, instance, sinon.match.func)
         done()
       })
@@ -308,13 +308,13 @@ describe('GitHubBot', function () {
   describe('#notifyOnAutoDeploy', function () {
     beforeEach(function (done) {
       sinon.stub(GitHub.prototype, 'acceptInvitation').yieldsAsync(null)
-      sinon.stub(GitHubBot.prototype, 'upsertComments').yieldsAsync(null)
+      sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
       done()
     })
 
     afterEach(function (done) {
       GitHub.prototype.acceptInvitation.restore()
-      GitHubBot.prototype.upsertComments.restore()
+      GitHubBot.prototype._upsertComments.restore()
       done()
     })
 
@@ -346,7 +346,7 @@ describe('GitHubBot', function () {
         githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
-          sinon.assert.notCalled(GitHubBot.prototype.upsertComments)
+          sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
           done()
         })
       })
@@ -378,7 +378,7 @@ describe('GitHubBot', function () {
 
     it('should fail if upserting comments failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHubBot.prototype.upsertComments.yieldsAsync(githubError)
+      GitHubBot.prototype._upsertComments.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -421,8 +421,8 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
           instance.owner.username,
           sinon.match.func)
-        sinon.assert.calledOnce(GitHubBot.prototype.upsertComments)
-        sinon.assert.calledWith(GitHubBot.prototype.upsertComments,
+        sinon.assert.calledOnce(GitHubBot.prototype._upsertComments)
+        sinon.assert.calledWith(GitHubBot.prototype._upsertComments,
           gitInfo, instance, sinon.match.func)
         done()
       })
