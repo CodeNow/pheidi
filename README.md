@@ -1,5 +1,8 @@
 ## Pheidi
 
+![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
+
 ![Pheidi](https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Phidippides.jpg/220px-Phidippides.jpg)
 
 Pheidi stands for [Pheidippides](https://en.wikipedia.org/wiki/Pheidippides) -

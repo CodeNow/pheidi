@@ -318,6 +318,40 @@ describe('GitHubBot', function () {
       done()
     })
 
+    describe('bot disabled', function () {
+      before(function (done) {
+        process.env.ENABLE_GITHUB_PR_COMMENTS = 'false'
+        done()
+      })
+      after(function (done) {
+        process.env.ENABLE_GITHUB_PR_COMMENTS = 'true'
+        done()
+      })
+
+      it('should do nothing', function (done) {
+        const githubBot = new GitHubBot('anton-token')
+        const gitInfo = {
+          repo: 'codenow/hellonode',
+          branch: 'feature-1',
+          number: 2
+        }
+        const instance = {
+          name: 'inst-1',
+          owner: {
+            username: 'codenow'
+          },
+          shortHash: 'ga71a12',
+          masterPod: true
+        }
+        githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
+          sinon.assert.notCalled(GitHubBot.prototype.upsertComments)
+          done()
+        })
+      })
+    })
+
     it('should fail if accept invitation failed', function (done) {
       const githubError = new Error('GitHub error')
       GitHub.prototype.acceptInvitation.yieldsAsync(githubError)

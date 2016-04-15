@@ -10,15 +10,7 @@ const GitHub = require('models/github')
 
 describe('GitHubDeploy', function () {
   const ctx = {}
-  before(function (done) {
-    ctx.originalStatusFlag = process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES
-    process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = 'true'
-    done()
-  })
-  after(function (done) {
-    process.env.ENABLE_GITHUB_DEPLOYMENT_STATUSES = ctx.originalStatusFlag
-    done()
-  })
+
   describe('#_deploymentStatus', function () {
     describe('disabled statuses', function () {
       before(function (done) {
