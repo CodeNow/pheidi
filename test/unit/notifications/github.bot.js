@@ -21,12 +21,14 @@ describe('GitHubBot', function () {
       sinon.stub(GitHub.prototype, 'updateComment').yieldsAsync(null)
       done()
     })
+
     afterEach(function (done) {
       GitHub.prototype.findCommentByUser.restore()
       GitHub.prototype.addComment.restore()
       GitHub.prototype.updateComment.restore()
       done()
     })
+
     it('should fail if findCommentByUser failed', function (done) {
       const githubError = new Error('GitHub error')
       GitHub.prototype.findCommentByUser.yieldsAsync(githubError)
@@ -50,6 +52,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should fail if updateComment failed', function (done) {
       const githubError = new Error('GitHub error')
       GitHub.prototype.updateComment.yieldsAsync(githubError)
@@ -73,6 +76,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should fail if addComment failed', function (done) {
       GitHub.prototype.findCommentByUser.yieldsAsync(null, null)
       const githubError = new Error('GitHub error')
@@ -97,6 +101,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should call updateComment if comment found', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -129,6 +134,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should call createComment if comment not found', function (done) {
       GitHub.prototype.findCommentByUser.yieldsAsync(null, null)
       const githubBot = new GitHubBot('anton-token')
@@ -163,6 +169,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentByUser.yieldsAsync(null, {
         body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
@@ -208,13 +215,15 @@ describe('GitHubBot', function () {
       sinon.stub(GitHubBot.prototype, 'upsertComment').yieldsAsync(null)
       done()
     })
+
     afterEach(function (done) {
       GitHub.prototype.listOpenPullRequestsForBranch.restore()
       GitHubBot.prototype.upsertComment.restore()
       done()
     })
+
     it('should fail if fetching prs failed', function (done) {
-      var githubError = new Error('GitHub error')
+      const githubError = new Error('GitHub error')
       GitHub.prototype.listOpenPullRequestsForBranch.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -236,8 +245,9 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should fail if upserting comment failed', function (done) {
-      var githubError = new Error('GitHub error')
+      const githubError = new Error('GitHub error')
       GitHubBot.prototype.upsertComment.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -259,6 +269,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should upsert 2 comments to two prs', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -300,13 +311,15 @@ describe('GitHubBot', function () {
       sinon.stub(GitHubBot.prototype, 'upsertComments').yieldsAsync(null)
       done()
     })
+
     afterEach(function (done) {
       GitHub.prototype.acceptInvitation.restore()
       GitHubBot.prototype.upsertComments.restore()
       done()
     })
+
     it('should fail if accept invitation failed', function (done) {
-      var githubError = new Error('GitHub error')
+      const githubError = new Error('GitHub error')
       GitHub.prototype.acceptInvitation.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -328,8 +341,9 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should fail if upserting comments failed', function (done) {
-      var githubError = new Error('GitHub error')
+      const githubError = new Error('GitHub error')
       GitHubBot.prototype.upsertComments.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -351,6 +365,7 @@ describe('GitHubBot', function () {
         done()
       })
     })
+
     it('should work without errors', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
