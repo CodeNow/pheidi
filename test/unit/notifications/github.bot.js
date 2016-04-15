@@ -305,7 +305,7 @@ describe('GitHubBot', function () {
       })
     })
   })
-  describe('#notifyOnAutoDeploy', function () {
+  describe('#notifyOnUpdate', function () {
     beforeEach(function (done) {
       sinon.stub(GitHub.prototype, 'acceptInvitation').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
@@ -343,7 +343,7 @@ describe('GitHubBot', function () {
           shortHash: 'ga71a12',
           masterPod: true
         }
-        githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+        githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
@@ -369,7 +369,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -393,7 +393,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -415,7 +415,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
         sinon.assert.calledWith(GitHub.prototype.acceptInvitation,

@@ -105,7 +105,7 @@ describe('Instance Deployed Worker', function () {
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
       sinon.createStubInstance(GitHubDeploy)
       sinon.stub(GitHubDeploy.prototype, 'deploymentSucceeded')
-      sinon.stub(GitHubBot.prototype, 'notifyOnAutoDeploy')
+      sinon.stub(GitHubBot.prototype, 'notifyOnUpdate')
       done()
     })
 
@@ -118,7 +118,7 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneUserAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
       GitHubDeploy.prototype.deploymentSucceeded.restore()
-      GitHubBot.prototype.notifyOnAutoDeploy.restore()
+      GitHubBot.prototype.notifyOnUpdate.restore()
       done()
     })
 
@@ -329,8 +329,8 @@ describe('Instance Deployed Worker', function () {
       it('should call bot notification', function (done) {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnAutoDeploy)
-          sinon.assert.calledWith(GitHubBot.prototype.notifyOnAutoDeploy,
+          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdate)
+          sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdate,
             testCv.build.triggeredAction.appCodeVersion,
             testInstance,
             sinon.match.func)
@@ -343,7 +343,7 @@ describe('Instance Deployed Worker', function () {
         Mongo.prototype.findOneInstanceAsync.resolves(instance)
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.notifyOnAutoDeploy)
+          sinon.assert.notCalled(GitHubBot.prototype.notifyOnUpdate)
           done()
         })
       })
@@ -373,7 +373,7 @@ describe('Instance Deployed Worker', function () {
             Mongo.prototype.findOneSettingAsync,
             Slack.prototype.notifyOnAutoDeploy,
             GitHubDeploy.prototype.deploymentSucceeded,
-            GitHubBot.prototype.notifyOnAutoDeploy
+            GitHubBot.prototype.notifyOnUpdate
           )
           done()
         })
