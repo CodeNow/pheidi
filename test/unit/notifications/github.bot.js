@@ -441,7 +441,7 @@ describe('GitHubBot', function () {
     })
   })
   describe('#_render', function () {
-    it('should return message with one link', function (done) {
+    it('should return correct message for the running state', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -459,6 +459,69 @@ describe('GitHubBot', function () {
       }
       const md = githubBot._render(gitInfo, instance)
       assert.equal(md, 'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the building state', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'building'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 is building. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the stopped state', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'stopped'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 has stopped. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the failed state', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'failed'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
       done()
     })
   })
