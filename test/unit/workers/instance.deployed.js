@@ -159,6 +159,7 @@ describe('Instance Deployed Worker', function () {
             done()
           })
         })
+
         it('should throw a task fatal error if job is missing cvId', function (done) {
           Worker({ instanceId: testInstanceId }).asCallback(function (err) {
             assert.isDefined(err)
@@ -168,6 +169,7 @@ describe('Instance Deployed Worker', function () {
             done()
           })
         })
+
         it('should throw a task fatal error if job is missing cvId', function (done) {
           Worker({ instanceId: testInstanceId, cvId: {} }).asCallback(function (err) {
             assert.isDefined(err)
@@ -178,6 +180,7 @@ describe('Instance Deployed Worker', function () {
           })
         })
       })
+
       describe('behavioral errors', function () {
         it('should reject with any instance search error', function (done) {
           const mongoError = new Error('Mongo failed')
