@@ -121,6 +121,100 @@ describe('Instance Updated Worker', function () {
           done()
         })
       })
+
+      it('should throw a task fatal error if the instance owner is not defined', function (done) {
+        Worker({ instance: {} }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /owner.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the instance owner.github is not defined', function (done) {
+        Worker({ instance: { owner: {} } }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /github.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the instance owner.github is not a number', function (done) {
+        const payload = {
+          instance:
+          {
+            owner: {
+              github: 'anton'
+            }
+          }
+        }
+        Worker(payload).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /github.*number/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the contextVersions is not defined', function (done) {
+        const payload = {
+          instance:
+          {
+            owner: {
+              github: 1
+            }
+          }
+        }
+        Worker(payload).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /contextVersions.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the contextVersions is not an array', function (done) {
+        const payload = {
+          instance:
+          {
+            owner: {
+              github: 1
+            },
+            contextVersions: {}
+          }
+        }
+        Worker(payload).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /contextVersions.*array/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the contextVersion is not an object', function (done) {
+        const payload = {
+          instance:
+          {
+            owner: {
+              github: 1
+            },
+            contextVersions: [1]
+          }
+        }
+        Worker(payload).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /context version.*must be an object/i)
+          done()
+        })
+      })
     })
     describe('regular flow', function () {
       beforeEach(function (done) {
