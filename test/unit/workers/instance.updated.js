@@ -232,7 +232,8 @@ describe('Instance Updated Worker', function () {
         GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
         const instance = {
           owner: {
-            github: 2828361
+            github: 2828361,
+            username: 'Runnable'
           },
           contextVersions: [
             {
@@ -248,7 +249,7 @@ describe('Instance Updated Worker', function () {
             }
           ]
         }
-        Worker({ instance: instance }).asCallback(function (err) {
+        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isDefined(err)
           assert.equal(err.message, githubError.message)
           done()
@@ -334,8 +335,10 @@ describe('Instance Updated Worker', function () {
 
       it('should call notifyOnUpdate', function (done) {
         const instance = {
+          id: '57153cef3f41b71d004e7c27',
           owner: {
-            github: 2828361
+            github: 2828361,
+            username: 'Runnable'
           },
           contextVersions: [
             {
@@ -351,7 +354,7 @@ describe('Instance Updated Worker', function () {
             }
           ]
         }
-        Worker({ instance: instance }).asCallback(function (err) {
+        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isNull(err)
           sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdate)
           sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdate,
