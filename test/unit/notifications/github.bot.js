@@ -60,7 +60,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -85,7 +86,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -107,7 +109,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -129,7 +132,7 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.updateComment,
           gitInfo.repo,
           ctx.comment.id,
-          'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+          'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
           sinon.match.func)
         done()
       })
@@ -141,7 +144,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -163,7 +167,7 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.addComment,
           gitInfo.repo,
           gitInfo.number,
-          'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+          'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
           sinon.match.func
         )
         done()
@@ -172,14 +176,15 @@ describe('GitHubBot', function () {
 
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentByUser.yieldsAsync(null, {
-        body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+        body: 'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
         id: 2
       })
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -229,7 +234,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -253,7 +259,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -275,7 +282,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -305,7 +313,7 @@ describe('GitHubBot', function () {
       })
     })
   })
-  describe('#notifyOnAutoDeploy', function () {
+  describe('#notifyOnUpdate', function () {
     beforeEach(function (done) {
       sinon.stub(GitHub.prototype, 'acceptInvitation').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
@@ -333,7 +341,8 @@ describe('GitHubBot', function () {
         const gitInfo = {
           repo: 'codenow/hellonode',
           branch: 'feature-1',
-          number: 2
+          number: 2,
+          state: 'running'
         }
         const instance = {
           name: 'inst-1',
@@ -343,7 +352,7 @@ describe('GitHubBot', function () {
           shortHash: 'ga71a12',
           masterPod: true
         }
-        githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+        githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
@@ -359,7 +368,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -369,7 +379,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -383,7 +393,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -393,7 +404,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -405,7 +416,8 @@ describe('GitHubBot', function () {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -415,7 +427,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnAutoDeploy(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
         sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
@@ -429,12 +441,13 @@ describe('GitHubBot', function () {
     })
   })
   describe('#_render', function () {
-    it('should return message with one link', function (done) {
+    it('should return correct message for the running state', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
-        number: 2
+        number: 2,
+        state: 'running'
       }
       const instance = {
         name: 'inst-1',
@@ -445,7 +458,70 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance)
-      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
+      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the building state', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'building'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 is building. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the stopped state', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'stopped'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 has stopped. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the failed state', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'failed'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance)
+      assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
       done()
     })
   })

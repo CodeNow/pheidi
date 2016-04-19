@@ -267,7 +267,6 @@ describe('Slack', function () {
           username: 'CodeNow'
         }
       }
-      var domain = process.env.APP_SUBDOMAIN + '.' + process.env.DOMAIN
       var text = Slack.createAutoDeployText(gitInfo, instance)
       var expected = 'Your <http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcommit%2Fa240edf982d467201845b3bf10ccbe16f6049ea9'
@@ -275,7 +274,7 @@ describe('Slack', function () {
       expected += '<http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcompare%2Fa240edf982d4...a240edf982d4|1 more>)'
       expected += ' to CodeNow/api (feature-1) are deployed on'
-      expected += ' <https://' + domain + '/CodeNow/server-1?ref=slack|server-1>'
+      expected += ' <' + process.env.WEB_URL + '/CodeNow/server-1?ref=slack|server-1>'
       assert.equal(text, expected)
       done()
     })
@@ -300,13 +299,12 @@ describe('Slack', function () {
           username: 'CodeNow'
         }
       }
-      var domain = process.env.APP_SUBDOMAIN + '.' + process.env.DOMAIN
       var text = Slack.createAutoDeployText(gitInfo, instance)
       var expected = 'Your <http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcommit%2Fa240edf982d467201845b3bf10ccbe16f6049ea9'
       expected += '|changes> (init &amp commit &amp push long test   next line   3d...)'
       expected += ' to CodeNow/api (feature-1) are deployed on'
-      expected += ' <https://' + domain + '/CodeNow/server-1?ref=slack|server-1>'
+      expected += ' <' + process.env.WEB_URL + '/CodeNow/server-1?ref=slack|server-1>'
       assert.equal(text, expected)
       done()
     })

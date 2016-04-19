@@ -18,8 +18,11 @@ Currently there is integration with Slack and GitHub Pull Requests. In the long-
 
 ## Flow
 
-Pheidi subscribed to the `instance.deployed` event (fired by API). Upon recieving this event Pheidi will try to:
+Pheidi subscribed to:
 
- - deliver message to the Slack that context version was deployed to the instance
- - deliver message deploy message to the GitHub PR page that context version was deployed to the instance
- - *COMING SOON* deliver @runnabot message on the GitHub PR page using PR comments that context version was deployed to the instance
+  1. `instance.deployed` event (fired by API). Upon receiving this event Pheidi will try deliver message to the Slack that context version was deployed to the instance
+  2. `instance.updated` event (fired by API). Upon receiving this event Pheidi will try send 4 different types of messages using @runnabot to the appropriate GitHub PR page:
+   - building - runnabot will comment on PR that instance is building
+   - stopped - runnabot will comment on PR that instance is stopped (crashed or stopped manually)
+   - failed - runnabot will comment on PR that instance build has failed
+   - running - runnabot will comment on PR that instance running successfully
