@@ -11,7 +11,7 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const TaskFatalError = require('ponos').TaskFatalError
-const GitHubBot = require('notifications/github.bot')
+const rabbitmq = require('rabbitmq')
 const Worker = require('workers/instance.updated')
 
 describe('Instance Updated Worker', function () {
@@ -218,18 +218,18 @@ describe('Instance Updated Worker', function () {
     })
     describe('regular flow', function () {
       beforeEach(function (done) {
-        sinon.stub(GitHubBot.prototype, 'notifyOnUpdate').yieldsAsync()
+        sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
         done()
       })
 
       afterEach(function (done) {
-        GitHubBot.prototype.notifyOnUpdate.restore()
+        rabbitmq.publishGitHubBotNotify.restore()
         done()
       })
 
-      it('should fail if notifyOnUpdate failed', function (done) {
+      it('should fail if notifyOnUpdate throwed', function (done) {
         const githubError = new Error('GitHub error')
-        GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
+        rabbitmq.publishGitHubBotNotify.throws(githubError)
         const instance = {
           owner: {
             github: 2828361,
@@ -277,7 +277,7 @@ describe('Instance Updated Worker', function () {
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.notifyOnUpdate)
+          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })
@@ -304,7 +304,7 @@ describe('Instance Updated Worker', function () {
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.notifyOnUpdate)
+          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })
@@ -328,12 +328,12 @@ describe('Instance Updated Worker', function () {
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.notifyOnUpdate)
+          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })
 
-      it('should call notifyOnUpdate', function (done) {
+      it('should call rabbitmq.publishGitHubBotNotify', function (done) {
         const instance = {
           id: '57153cef3f41b71d004e7c27',
           owner: {
@@ -356,14 +356,16 @@ describe('Instance Updated Worker', function () {
         }
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdate)
-          sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdate,
+          sinon.assert.calledOnce(rabbitmq.publishGitHubBotNotify)
+          sinon.assert.calledWith(rabbitmq.publishGitHubBotNotify,
             {
-              repo: 'CodeNow/api',
-              branch: 'feature1',
-              state: 'failed'
-            },
-            instance)
+              instance: instance,
+              pushInfo: {
+                repo: 'CodeNow/api',
+                branch: 'feature1',
+                state: 'failed'
+              }
+            })
           done()
         })
       })
