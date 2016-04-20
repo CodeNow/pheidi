@@ -5,17 +5,17 @@ require('loadenv')()
 const CriticalError = require('error-cat/errors/critical-error')
 const ErrorCat = require('error-cat')
 const log = require('logger').child({ module: 'main' })
-const server = require('worker-server')
+const workerServer = require('worker-server')
 const queueServer = require('queue-worker-server')
 const rabbitmq = require('rabbitmq')
 
 rabbitmq.publisher.connectAsync()
   .then(() => {
     log.info('Pheidi rabbimq publisher started')
-    server.start()
+    return workerServer.start()
       .then(() => {
         log.info('Pheidi main worker server started')
-        queueServer.start()
+        return queueServer.start()
           .then(() => {
             log.info('Pheidi queue server started')
             log.info('Pheidi all components started')
