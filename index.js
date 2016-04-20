@@ -9,11 +9,11 @@ const server = require('worker-server')
 const queueServer = require('queue-worker-server')
 const rabbitmq = require('rabbitmq')
 
-queueServer.start()
+rabbitmq.publisher.connectAsync()
   .then(() => {
     server.start()
       .then(() => {
-        rabbitmq.publisher.connectAsync()
+        queueServer.start()
           .then(() => {
             log.info('Pheidi server started')
           })
