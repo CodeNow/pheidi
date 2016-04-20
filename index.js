@@ -24,7 +24,7 @@ rabbitmq.publisher.connectAsync()
   .catch((err) => {
     log.fatal({ err: err }, 'Pheidi server failed to start')
     ErrorCat.report(new CriticalError(
-      'Pheidi server failed to start',
+      'server failed to start',
       { err: err }
     ))
     process.exit(1)
