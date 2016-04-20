@@ -11,11 +11,14 @@ const rabbitmq = require('rabbitmq')
 
 rabbitmq.publisher.connectAsync()
   .then(() => {
+    log.info('Pheidi rabbimq publisher started')
     server.start()
       .then(() => {
+        log.info('Pheidi main worker server started')
         queueServer.start()
           .then(() => {
-            log.info('Pheidi server started')
+            log.info('Pheidi queue server started')
+            log.info('Pheidi all components started')
           })
       })
   })
