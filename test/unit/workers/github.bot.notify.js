@@ -11,75 +11,10 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const TaskFatalError = require('ponos').TaskFatalError
-const rabbitmq = require('rabbitmq')
-const Worker = require('workers/instance.updated')
+const GitHubBot = require('notifications/github.bot')
+const Worker = require('workers/github.bot.notify')
 
-describe('Instance Updated Worker', function () {
-  describe('#instanceState', function () {
-    it('should return failed if build failed', function (done) {
-      const cv = {
-        build: {
-          failed: true
-        }
-      }
-      const state = Worker._instanceState(cv, {})
-      assert.equal(state, 'failed')
-      done()
-    })
-
-    it('should return running if build completed', function (done) {
-      const cv = {
-        build: {
-          failed: false,
-          completed: new Date().getTime()
-        }
-      }
-      const state = Worker._instanceState(cv, {})
-      assert.equal(state, 'running')
-      done()
-    })
-
-    it('should return stopped if build completed but container exited', function (done) {
-      const cv = {
-        build: {
-          failed: false,
-          completed: new Date().getTime()
-        }
-      }
-      const container = {
-        inspect: {
-          State: {
-            Status: 'exited'
-          }
-        }
-      }
-      const state = Worker._instanceState(cv, container)
-      assert.equal(state, 'stopped')
-      done()
-    })
-
-    it('should return build_started if build has that status', function (done) {
-      const cv = {
-        state: 'build_started',
-        build: {}
-      }
-      const container = {}
-      const state = Worker._instanceState(cv, container)
-      assert.equal(state, 'building')
-      done()
-    })
-
-    it('should return null if status cannot be calculated', function (done) {
-      const cv = {
-        state: 'build_not_started',
-        build: {}
-      }
-      const container = {}
-      const state = Worker._instanceState(cv, container)
-      assert.isNull(state)
-      done()
-    })
-  })
+describe('GitHub Bot Notify Worker', function () {
   describe('worker', function () {
     describe('invalid Job', function () {
       it('should throw a task fatal error if the job is missing entirely', function (done) {
@@ -102,18 +37,96 @@ describe('Instance Updated Worker', function () {
         })
       })
 
-      it('should throw a task fatal error if the job is missing a instance', function (done) {
+      it('should throw a task fatal error if the job is missing a pushInfo', function (done) {
         Worker({}).asCallback(function (err) {
           assert.isDefined(err)
           assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /instance.*required/i)
+          assert.match(err.data.err.message, /pushInfo.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo is not an object', function (done) {
+        Worker({ pushInfo: 1 }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /pushInfo.*object/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo.repo is not defined', function (done) {
+        Worker({ pushInfo: {} }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /repo.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo.repo is not a string', function (done) {
+        Worker({ pushInfo: { repo: 1 } }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /repo.*must be a string/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo.branch is not defined', function (done) {
+        Worker({ pushInfo: { repo: 'CodeNow/api' } }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /branch.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo.branch is not a string', function (done) {
+        Worker({ pushInfo: { repo: 'CodeNow/api', branch: 1 } }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /branch.*must be a string/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo.state is not defined', function (done) {
+        Worker({ pushInfo: { repo: 'CodeNow/api', branch: 'f1' } }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /state.*required/i)
+          done()
+        })
+      })
+
+      it('should throw a task fatal error if the pushInfo.state is not a string', function (done) {
+        Worker({ pushInfo: { repo: 'CodeNow/api', branch: 'f1', state: 1 } }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, TaskFatalError)
+          assert.isDefined(err.data.err)
+          assert.match(err.data.err.message, /state.*must be a string/i)
           done()
         })
       })
 
       it('should throw a task fatal error if the instance is not an object', function (done) {
-        Worker({ instance: 1 }).asCallback(function (err) {
+        const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
+          instance: 1
+        }
+        Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
           assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
@@ -123,7 +136,15 @@ describe('Instance Updated Worker', function () {
       })
 
       it('should throw a task fatal error if the instance owner is not defined', function (done) {
-        Worker({ instance: {} }).asCallback(function (err) {
+        const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
+          instance: {}
+        }
+        Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
           assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
@@ -133,7 +154,15 @@ describe('Instance Updated Worker', function () {
       })
 
       it('should throw a task fatal error if the instance owner.github is not defined', function (done) {
-        Worker({ instance: { owner: {} } }).asCallback(function (err) {
+        const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
+          instance: { owner: {} }
+        }
+        Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
           assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
@@ -144,6 +173,11 @@ describe('Instance Updated Worker', function () {
 
       it('should throw a task fatal error if the instance owner.github is not a number', function (done) {
         const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
           instance:
           {
             owner: {
@@ -162,6 +196,11 @@ describe('Instance Updated Worker', function () {
 
       it('should throw a task fatal error if the contextVersions is not defined', function (done) {
         const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
           instance:
           {
             owner: {
@@ -180,6 +219,11 @@ describe('Instance Updated Worker', function () {
 
       it('should throw a task fatal error if the contextVersions is not an array', function (done) {
         const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
           instance:
           {
             owner: {
@@ -199,6 +243,11 @@ describe('Instance Updated Worker', function () {
 
       it('should throw a task fatal error if the contextVersion is not an object', function (done) {
         const payload = {
+          pushInfo: {
+            repo: 'CodeNow/api',
+            branch: 'f1',
+            state: 'running'
+          },
           instance:
           {
             owner: {
@@ -218,18 +267,18 @@ describe('Instance Updated Worker', function () {
     })
     describe('regular flow', function () {
       beforeEach(function (done) {
-        sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
+        sinon.stub(GitHubBot.prototype, 'notifyOnUpdate').yieldsAsync()
         done()
       })
 
       afterEach(function (done) {
-        rabbitmq.publishGitHubBotNotify.restore()
+        GitHubBot.prototype.notifyOnUpdate.restore()
         done()
       })
 
-      it('should fail if notifyOnUpdate throwed', function (done) {
+      it('should fail if githubBot.notifyOnUpdate failed', function (done) {
         const githubError = new Error('GitHub error')
-        rabbitmq.publishGitHubBotNotify.throws(githubError)
+        GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
         const instance = {
           owner: {
             github: 2828361,
@@ -249,91 +298,19 @@ describe('Instance Updated Worker', function () {
             }
           ]
         }
-        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+        const pushInfo = {
+          repo: 'CodeNow/api',
+          branch: 'f1',
+          state: 'running'
+        }
+        Worker({ instance: instance, pushInfo: pushInfo }).asCallback(function (err) {
           assert.isDefined(err)
           assert.equal(err.message, githubError.message)
           done()
         })
       })
 
-      it('should do nothing if org was not whitelisted', function (done) {
-        const instance = {
-          owner: {
-            github: 213123123123123
-          },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {
-                failed: true
-              }
-            }
-          ]
-        }
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
-          done()
-        })
-      })
-
-      it('should do nothing if no acv was found', function (done) {
-        const instance = {
-          owner: {
-            github: 2828361
-          },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1',
-                  additionalRepo: true
-                }
-              ],
-              build: {
-                failed: true
-              }
-            }
-          ]
-        }
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
-          done()
-        })
-      })
-
-      it('should do nothing if instance state is invalid', function (done) {
-        const instance = {
-          owner: {
-            github: 2828361
-          },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {}
-            }
-          ]
-        }
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
-          done()
-        })
-      })
-
-      it('should call rabbitmq.publishGitHubBotNotify', function (done) {
+      it('should call githubBot.notifyOnUpdate', function (done) {
         const instance = {
           id: '57153cef3f41b71d004e7c27',
           owner: {
@@ -354,18 +331,15 @@ describe('Instance Updated Worker', function () {
             }
           ]
         }
-        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+        const pushInfo = {
+          repo: 'CodeNow/api',
+          branch: 'feature1',
+          state: 'running'
+        }
+        Worker({ instance: instance, pushInfo: pushInfo }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.calledOnce(rabbitmq.publishGitHubBotNotify)
-          sinon.assert.calledWith(rabbitmq.publishGitHubBotNotify,
-            {
-              instance: instance,
-              pushInfo: {
-                repo: 'CodeNow/api',
-                branch: 'feature1',
-                state: 'failed'
-              }
-            })
+          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdate)
+          sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdate, pushInfo, instance)
           done()
         })
       })

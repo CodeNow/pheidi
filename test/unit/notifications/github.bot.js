@@ -132,7 +132,7 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.updateComment,
           gitInfo.repo,
           ctx.comment.id,
-          'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+          'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
           sinon.match.func)
         done()
       })
@@ -167,7 +167,7 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.addComment,
           gitInfo.repo,
           gitInfo.number,
-          'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+          'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
           sinon.match.func
         )
         done()
@@ -176,7 +176,7 @@ describe('GitHubBot', function () {
 
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentByUser.yieldsAsync(null, {
-        body: 'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+        body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
         id: 2
       })
       const githubBot = new GitHubBot('anton-token')
@@ -458,7 +458,7 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance)
-      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](https://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
+      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
       done()
     })
 
