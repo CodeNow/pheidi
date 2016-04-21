@@ -10,6 +10,7 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
+const AccessDeniedError = require('models/access-denied-error')
 const TaskFatalError = require('ponos').TaskFatalError
 const GitHubBot = require('notifications/github.bot')
 const Worker = require('workers/github.bot.notify')
@@ -306,6 +307,41 @@ describe('GitHub Bot Notify Worker', function () {
         Worker({ instance: instance, pushInfo: pushInfo }).asCallback(function (err) {
           assert.isDefined(err)
           assert.equal(err.message, githubError.message)
+          done()
+        })
+      })
+
+      it('should return TaskFatalError if runnabot has no org access', function (done) {
+        const githubError = new AccessDeniedError('No org access for runnabot')
+        GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
+        const instance = {
+          owner: {
+            github: 2828361,
+            username: 'Runnable'
+          },
+          contextVersions: [
+            {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ],
+              build: {
+                failed: true
+              }
+            }
+          ]
+        }
+        const pushInfo = {
+          repo: 'CodeNow/api',
+          branch: 'f1',
+          state: 'running'
+        }
+        Worker({ instance: instance, pushInfo: pushInfo }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.match(err.message, /Runnabot has no access to an org/)
+          assert.instanceOf(err, TaskFatalError)
           done()
         })
       })
