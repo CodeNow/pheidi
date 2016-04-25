@@ -10,9 +10,11 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
+const clone = require('101/clone')
 const ObjectID = require('mongodb').ObjectID
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
+const Github = require('models/github')
 const GitHubDeploy = require('notifications/github.deploy')
 const Slack = require('notifications/slack')
 const Worker = require('workers/instance.deployed')
@@ -38,6 +40,11 @@ describe('Instance Deployed Worker', function () {
           }
         }
       }
+    }
+    const owner = {
+      github: 2828361,
+      username: 'codenow',
+      gravatar: ''
     }
     const testInstance = {
       _id: testInstanceId,
@@ -98,6 +105,7 @@ describe('Instance Deployed Worker', function () {
       sinon.stub(Mongo.prototype, 'findOneContextVersionAsync').resolves(testCv)
       sinon.stub(Mongo.prototype, 'findOneSettingAsync').resolves(testSettings)
       sinon.stub(Mongo.prototype, 'findOneUserAsync').rejects(new Error('define behavior'))
+      sinon.stub(Github.prototype, 'getUserByIdAsync').resolves(owner)
       Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).resolves(mockPushUser)
       Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).resolves(mockInstanceUser)
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
@@ -113,6 +121,7 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneContextVersionAsync.restore()
       Mongo.prototype.findOneSettingAsync.restore()
       Mongo.prototype.findOneUserAsync.restore()
+      Github.prototype.getUserByIdAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
       GitHubDeploy.prototype.deploymentSucceeded.restore()
       done()
@@ -337,6 +346,43 @@ describe('Instance Deployed Worker', function () {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(Slack.prototype.notifyOnAutoDeploy)
+          done()
+        })
+      })
+
+      it('should fetch owner info from github if not defined', function (done) {
+        const instance = clone(testInstance)
+        instance.owner.username = null
+        Mongo.prototype.findOneInstanceAsync.resolves(instance)
+        Worker(testData).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
+          sinon.assert.calledWith(Github.prototype.getUserByIdAsync,
+            instance.owner.github)
+          sinon.assert.calledOnce(Slack.prototype.notifyOnAutoDeploy)
+          sinon.assert.calledWith(Slack.prototype.notifyOnAutoDeploy,
+            testCv.build.triggeredAction.appCodeVersion,
+            mockPushUser.accounts.github.username,
+            testInstance,
+            sinon.match.func)
+          const passedInstance = Slack.prototype.notifyOnAutoDeploy.getCall(0).args[2]
+          assert.equal(passedInstance.owner.username, owner.username)
+          done()
+        })
+      })
+
+      it('should return an error if fetching owner failed', function (done) {
+        const instance = clone(testInstance)
+        instance.owner.username = null
+        Mongo.prototype.findOneInstanceAsync.resolves(instance)
+        const githubErr = new Error('GitHub error')
+        Github.prototype.getUserByIdAsync.rejects(githubErr)
+        Worker(testData).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.equal(err, githubErr)
+          sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
+          sinon.assert.calledWith(Github.prototype.getUserByIdAsync,
+            instance.owner.github)
           done()
         })
       })
