@@ -1,5 +1,5 @@
 /**
- * @module unit/workers/instance.updated
+ * @module unit/workers/instance.deleted
  */
 'use strict'
 
@@ -11,75 +11,10 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const TaskFatalError = require('ponos').TaskFatalError
-const rabbitmq = require('rabbitmq')
-const Worker = require('workers/instance.updated')
+const GitHubBot = require('notifications/github.bot')
+const Worker = require('workers/instance.deleted')
 
 describe('Instance Updated Worker', function () {
-  describe('#instanceState', function () {
-    it('should return failed if build failed', function (done) {
-      const cv = {
-        build: {
-          failed: true
-        }
-      }
-      const state = Worker._instanceState(cv, {})
-      assert.equal(state, 'failed')
-      done()
-    })
-
-    it('should return running if build completed', function (done) {
-      const cv = {
-        build: {
-          failed: false,
-          completed: new Date().getTime()
-        }
-      }
-      const state = Worker._instanceState(cv, {})
-      assert.equal(state, 'running')
-      done()
-    })
-
-    it('should return stopped if build completed but container exited', function (done) {
-      const cv = {
-        build: {
-          failed: false,
-          completed: new Date().getTime()
-        }
-      }
-      const container = {
-        inspect: {
-          State: {
-            Status: 'exited'
-          }
-        }
-      }
-      const state = Worker._instanceState(cv, container)
-      assert.equal(state, 'stopped')
-      done()
-    })
-
-    it('should return build_started if build has that status', function (done) {
-      const cv = {
-        state: 'build_started',
-        build: {}
-      }
-      const container = {}
-      const state = Worker._instanceState(cv, container)
-      assert.equal(state, 'building')
-      done()
-    })
-
-    it('should return null if status cannot be calculated', function (done) {
-      const cv = {
-        state: 'build_not_started',
-        build: {}
-      }
-      const container = {}
-      const state = Worker._instanceState(cv, container)
-      assert.isNull(state)
-      done()
-    })
-  })
   describe('worker', function () {
     describe('invalid Job', function () {
       it('should throw a task fatal error if the job is missing entirely', function (done) {
@@ -218,42 +153,15 @@ describe('Instance Updated Worker', function () {
     })
     describe('regular flow', function () {
       beforeEach(function (done) {
-        sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
+        sinon.stub(GitHubBot.prototype, 'deleteBranchNotificationsAsync').returns()
+        sinon.stub(GitHubBot.prototype, 'deleteAllNotificationsAsync').returns()
         done()
       })
 
       afterEach(function (done) {
-        rabbitmq.publishGitHubBotNotify.restore()
+        GitHubBot.prototype.deleteBranchNotificationsAsync.restore()
+        GitHubBot.prototype.deleteAllNotificationsAsync.restore()
         done()
-      })
-
-      it('should fail if notifyOnUpdate throwed', function (done) {
-        const githubError = new Error('GitHub error')
-        rabbitmq.publishGitHubBotNotify.throws(githubError)
-        const instance = {
-          owner: {
-            github: 2828361,
-            username: 'Runnable'
-          },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {
-                failed: true
-              }
-            }
-          ]
-        }
-        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.equal(err.message, githubError.message)
-          done()
-        })
       })
 
       it('should do nothing if org was not whitelisted', function (done) {
@@ -268,16 +176,14 @@ describe('Instance Updated Worker', function () {
                   repo: 'CodeNow/api',
                   branch: 'feature1'
                 }
-              ],
-              build: {
-                failed: true
-              }
+              ]
             }
           ]
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
           done()
         })
       })
@@ -295,78 +201,131 @@ describe('Instance Updated Worker', function () {
                   branch: 'feature1',
                   additionalRepo: true
                 }
-              ],
-              build: {
-                failed: true
-              }
+              ]
             }
           ]
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
           done()
         })
       })
 
-      it('should do nothing if instance state is invalid', function (done) {
-        const instance = {
-          owner: {
-            github: 2828361
-          },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {}
-            }
-          ]
-        }
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
-          done()
+      describe('non master instance', function () {
+        it('should fail if deleteBranchNotificationsAsync', function (done) {
+          const githubError = new Error('GitHub error')
+          GitHubBot.prototype.deleteBranchNotificationsAsync.rejects(githubError)
+          const instance = {
+            owner: {
+              github: 2828361,
+              username: 'Runnable'
+            },
+            contextVersions: [
+              {
+                appCodeVersions: [
+                  {
+                    repo: 'CodeNow/api',
+                    branch: 'feature1'
+                  }
+                ]
+              }
+            ]
+          }
+          Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.equal(err.message, githubError.message)
+            done()
+          })
+        })
+
+        it('should call deleteBranchNotificationsAsync', function (done) {
+          const instance = {
+            id: '57153cef3f41b71d004e7c27',
+            owner: {
+              github: 2828361,
+              username: 'Runnable'
+            },
+            contextVersions: [
+              {
+                appCodeVersions: [
+                  {
+                    repo: 'CodeNow/api',
+                    branch: 'feature1'
+                  }
+                ]
+              }
+            ]
+          }
+          Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+            assert.isNull(err)
+            sinon.assert.calledOnce(GitHubBot.prototype.deleteBranchNotificationsAsync)
+            sinon.assert.calledWith(GitHubBot.prototype.deleteBranchNotificationsAsync,
+              { repo: 'CodeNow/api',
+                branch: 'feature1'
+              })
+            done()
+          })
         })
       })
 
-      it('should call rabbitmq.publishGitHubBotNotify', function (done) {
-        const instance = {
-          id: '57153cef3f41b71d004e7c27',
-          owner: {
-            github: 2828361,
-            username: 'Runnable'
-          },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {
-                failed: true
+      describe('master instance', function () {
+        it('should fail if deleteAllNotificationsAsync', function (done) {
+          const githubError = new Error('GitHub error')
+          GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
+          const instance = {
+            owner: {
+              github: 2828361,
+              username: 'Runnable'
+            },
+            masterPod: true,
+            contextVersions: [
+              {
+                appCodeVersions: [
+                  {
+                    repo: 'CodeNow/api',
+                    branch: 'feature1'
+                  }
+                ]
               }
-            }
-          ]
-        }
-        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.calledOnce(rabbitmq.publishGitHubBotNotify)
-          sinon.assert.calledWith(rabbitmq.publishGitHubBotNotify,
-            {
-              instance: instance,
-              pushInfo: {
-                repo: 'CodeNow/api',
-                branch: 'feature1',
-                state: 'failed'
+            ]
+          }
+          Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.equal(err.message, githubError.message)
+            done()
+          })
+        })
+
+        it('should call deleteAllNotificationsAsync', function (done) {
+          const instance = {
+            id: '57153cef3f41b71d004e7c27',
+            masterPod: true,
+            owner: {
+              github: 2828361,
+              username: 'Runnable'
+            },
+            contextVersions: [
+              {
+                appCodeVersions: [
+                  {
+                    repo: 'CodeNow/api',
+                    branch: 'feature1'
+                  }
+                ]
               }
-            })
-          done()
+            ]
+          }
+          Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+            assert.isNull(err)
+            sinon.assert.calledOnce(GitHubBot.prototype.deleteAllNotificationsAsync)
+            sinon.assert.calledWith(GitHubBot.prototype.deleteAllNotificationsAsync,
+              { repo: 'CodeNow/api',
+                branch: 'feature1'
+              })
+            done()
+          })
         })
       })
     })
