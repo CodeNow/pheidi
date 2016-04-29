@@ -10,6 +10,101 @@ const GitHub = require('models/github')
 
 describe('GitHubBot', function () {
   const ctx = {}
+  describe('#_deleteComments', function () {
+    beforeEach(function (done) {
+      ctx.comments = [
+        {
+          body: 'PR-2 is deployed',
+          id: 2
+        },
+        {
+          body: 'PR-1 is deployed',
+          id: 1
+        }
+      ]
+      sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, ctx.comments)
+      sinon.stub(GitHub.prototype, 'deleteComment').yieldsAsync(null)
+      done()
+    })
+
+    afterEach(function (done) {
+      GitHub.prototype.findCommentsByUser.restore()
+      GitHub.prototype.deleteComment.restore()
+      done()
+    })
+
+    it('should fail if findCommentsByUser failed', function (done) {
+      const githubError = new Error('GitHub error')
+      GitHub.prototype.findCommentsByUser.yieldsAsync(githubError)
+      const githubBot = new GitHubBot()
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        number: 2
+      }
+      githubBot._deleteComments(gitInfo, function (error) {
+        assert.isDefined(error)
+        assert.equal(error, githubError)
+        done()
+      })
+    })
+
+    it('should fail if delete comment failed', function (done) {
+      const githubError = new Error('GitHub error')
+      GitHub.prototype.deleteComment.yieldsAsync(githubError)
+      const githubBot = new GitHubBot()
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        number: 2
+      }
+      githubBot._deleteComments(gitInfo, function (error) {
+        assert.isDefined(error)
+        assert.equal(error, githubError)
+        done()
+      })
+    })
+
+    it('should call functions in order and not fail', function (done) {
+      const githubBot = new GitHubBot()
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        number: 2
+      }
+      githubBot._deleteComments(gitInfo, function (error) {
+        assert.isNull(error)
+        sinon.assert.callOrder(GitHub.prototype.findCommentsByUser, GitHub.prototype.deleteComment)
+        done()
+      })
+    })
+
+    it('should call findCommentsByUser with correct params', function (done) {
+      const githubBot = new GitHubBot()
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        number: 2
+      }
+      githubBot._deleteComments(gitInfo, function (error) {
+        assert.isNull(error)
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser, gitInfo.repo, gitInfo.number)
+        done()
+      })
+    })
+
+    it('should call deletComment twice', function (done) {
+      const githubBot = new GitHubBot()
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        number: 2
+      }
+      githubBot._deleteComments(gitInfo, function (error) {
+        assert.isNull(error)
+        sinon.assert.calledTwice(GitHub.prototype.deleteComment)
+        sinon.assert.calledWith(GitHub.prototype.deleteComment, gitInfo.repo, ctx.comments[0].id)
+        sinon.assert.calledWith(GitHub.prototype.deleteComment, gitInfo.repo, ctx.comments[1].id)
+        done()
+      })
+    })
+  })
   describe('#_upsertComment', function () {
     beforeEach(function (done) {
       ctx.comment = {
@@ -523,6 +618,173 @@ describe('GitHubBot', function () {
       const md = githubBot._render(gitInfo, instance)
       assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
       done()
+    })
+  })
+
+  describe('#deleteAllNotifications', function () {
+    beforeEach(function (done) {
+      ctx.prs = [
+        { number: 1 },
+        { number: 2 }
+      ]
+      sinon.stub(GitHub.prototype, 'listOpenPullRequests').yieldsAsync(null, ctx.prs)
+      sinon.stub(GitHubBot.prototype, '_deleteComments').yieldsAsync(null)
+      done()
+    })
+
+    afterEach(function (done) {
+      ctx.prs = [
+        { number: 1 },
+        { number: 2 }
+      ]
+      GitHub.prototype.listOpenPullRequests.restore()
+      GitHubBot.prototype._deleteComments.restore()
+      done()
+    })
+
+    it('should fail if listOpenPullRequests failed', function (done) {
+      const error = new Error('GitHub error')
+      GitHub.prototype.listOpenPullRequests.yieldsAsync(error)
+      const githubBot = new GitHubBot()
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, error)
+        done()
+      })
+    })
+
+    it('should fail if _deleteComments failed', function (done) {
+      const error = new Error('GitHub error')
+      GitHubBot.prototype._deleteComments.yieldsAsync(error)
+      const githubBot = new GitHubBot()
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, error)
+        done()
+      })
+    })
+
+    it('should call listOpenPullRequests once', function (done) {
+      const githubBot = new GitHubBot()
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequests)
+        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequests, 'CodeNow/api')
+        done()
+      })
+    })
+
+    it('should call _deleteComments twice', function (done) {
+      const githubBot = new GitHubBot()
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledTwice(GitHubBot.prototype._deleteComments)
+        sinon.assert.calledWith(GitHubBot.prototype._deleteComments, {
+          repo: 'CodeNow/api',
+          number: ctx.prs[0].number
+        })
+        sinon.assert.calledWith(GitHubBot.prototype._deleteComments, {
+          repo: 'CodeNow/api',
+          number: ctx.prs[1].number
+        })
+        done()
+      })
+    })
+
+    it('should call functions in order', function (done) {
+      const githubBot = new GitHubBot()
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+        assert.isNull(err)
+        sinon.assert.callOrder(GitHub.prototype.listOpenPullRequests,
+          GitHubBot.prototype._deleteComments)
+        done()
+      })
+    })
+  })
+
+  describe('#deleteBranchNotifications', function () {
+    beforeEach(function (done) {
+      ctx.prs = [
+        { number: 1 },
+        { number: 2 }
+      ]
+      ctx.gitInfo = {
+        repo: 'CodeNow/api',
+        branch: 'feature-1'
+      }
+      sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranch').yieldsAsync(null, ctx.prs)
+      sinon.stub(GitHubBot.prototype, '_deleteComments').yieldsAsync(null)
+      done()
+    })
+
+    afterEach(function (done) {
+      ctx.prs = null
+      ctx.gitInfo = null
+      GitHub.prototype.listOpenPullRequestsForBranch.restore()
+      GitHubBot.prototype._deleteComments.restore()
+      done()
+    })
+
+    it('should fail if listOpenPullRequestsForBranch failed', function (done) {
+      const error = new Error('GitHub error')
+      GitHub.prototype.listOpenPullRequestsForBranch.yieldsAsync(error)
+      const githubBot = new GitHubBot()
+      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, error)
+        done()
+      })
+    })
+
+    it('should fail if _deleteComments failed', function (done) {
+      const error = new Error('GitHub error')
+      GitHubBot.prototype._deleteComments.yieldsAsync(error)
+      const githubBot = new GitHubBot()
+      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+        assert.isDefined(err)
+        assert.equal(err, error)
+        done()
+      })
+    })
+
+    it('should call listOpenPullRequestsForBranch once', function (done) {
+      const githubBot = new GitHubBot()
+      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
+        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
+          ctx.gitInfo.repo, ctx.gitInfo.branch)
+        done()
+      })
+    })
+
+    it('should call _deleteComments twice', function (done) {
+      const githubBot = new GitHubBot()
+      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledTwice(GitHubBot.prototype._deleteComments)
+        sinon.assert.calledWith(GitHubBot.prototype._deleteComments, {
+          repo: ctx.gitInfo.repo,
+          branch: ctx.gitInfo.branch,
+          number: ctx.prs[0].number
+        })
+        sinon.assert.calledWith(GitHubBot.prototype._deleteComments, {
+          repo: ctx.gitInfo.repo,
+          branch: ctx.gitInfo.branch,
+          number: ctx.prs[1].number
+        })
+        done()
+      })
+    })
+
+    it('should call functions in order', function (done) {
+      const githubBot = new GitHubBot()
+      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+        assert.isNull(err)
+        sinon.assert.callOrder(GitHub.prototype.listOpenPullRequestsForBranch,
+          GitHubBot.prototype._deleteComments)
+        done()
+      })
     })
   })
 })
