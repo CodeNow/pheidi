@@ -26,3 +26,4 @@ Pheidi subscribed to:
    - stopped - runnabot will comment on PR that instance is stopped (crashed or stopped manually)
    - failed - runnabot will comment on PR that instance build has failed
    - running - runnabot will comment on PR that instance running successfully
+  3. `instance.deleted` event (fired by API). Upon receiving this even Pheidi will try to delete @runnabot messages for the linked PR (if forked instance is being deleted) or PRs(if master instance is being deleted) 
