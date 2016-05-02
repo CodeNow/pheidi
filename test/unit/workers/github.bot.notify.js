@@ -269,18 +269,18 @@ describe('GitHub Bot Notify Worker', function () {
     })
     describe('regular flow', function () {
       beforeEach(function (done) {
-        sinon.stub(GitHubBot.prototype, 'notifyOnUpdate').yieldsAsync()
+        sinon.stub(GitHubBot.prototype, 'notifyOnUpdateAsync').resolves()
         done()
       })
 
       afterEach(function (done) {
-        GitHubBot.prototype.notifyOnUpdate.restore()
+        GitHubBot.prototype.notifyOnUpdateAsync.restore()
         done()
       })
 
       it('should fail if githubBot.notifyOnUpdate failed', function (done) {
         const githubError = new Error('GitHub error')
-        GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
+        GitHubBot.prototype.notifyOnUpdateAsync.rejects(githubError)
         const instance = {
           owner: {
             github: 2828361,
@@ -314,7 +314,7 @@ describe('GitHub Bot Notify Worker', function () {
 
       it('should return TaskFatalError if runnabot has no org access', function (done) {
         const githubError = new AccessDeniedError('No org access for runnabot')
-        GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
+        GitHubBot.prototype.notifyOnUpdateAsync.rejects(githubError)
         const instance = {
           owner: {
             github: 2828361,
@@ -349,7 +349,7 @@ describe('GitHub Bot Notify Worker', function () {
 
       it('should return TaskFatalError if runnabot has reached rate limit', function (done) {
         const githubError = new RateLimitedError('Runnabot has reached rate-limit')
-        GitHubBot.prototype.notifyOnUpdate.yieldsAsync(githubError)
+        GitHubBot.prototype.notifyOnUpdateAsync.rejects(githubError)
         const instance = {
           owner: {
             github: 2828361,
@@ -410,8 +410,8 @@ describe('GitHub Bot Notify Worker', function () {
         }
         Worker({ instance: instance, pushInfo: pushInfo }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdate)
-          sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdate, pushInfo, instance)
+          sinon.assert.calledOnce(GitHubBot.prototype.notifyOnUpdateAsync)
+          sinon.assert.calledWith(GitHubBot.prototype.notifyOnUpdateAsync, pushInfo, instance)
           done()
         })
       })
