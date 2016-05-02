@@ -10,6 +10,8 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
+const AccessDeniedError = require('models/access-denied-error')
+const RateLimitedError = require('models/rate-limited-error')
 const TaskFatalError = require('ponos').TaskFatalError
 const GitHubBot = require('notifications/github.bot')
 const Worker = require('workers/instance.deleted')
@@ -271,7 +273,7 @@ describe('Instance Updated Worker', function () {
       })
 
       describe('master instance', function () {
-        it('should fail if deleteAllNotificationsAsync', function (done) {
+        it('should fail if deleteAllNotificationsAsync failed', function (done) {
           const githubError = new Error('GitHub error')
           GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
           const instance = {
@@ -294,6 +296,62 @@ describe('Instance Updated Worker', function () {
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isDefined(err)
             assert.equal(err.message, githubError.message)
+            done()
+          })
+        })
+
+        it('should return TaskFatalError if runnabot has no org access', function (done) {
+          const githubError = new AccessDeniedError('No org access for runnabot')
+          GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
+          const instance = {
+            owner: {
+              github: 2828361,
+              username: 'Runnable'
+            },
+            masterPod: true,
+            contextVersions: [
+              {
+                appCodeVersions: [
+                  {
+                    repo: 'CodeNow/api',
+                    branch: 'feature1'
+                  }
+                ]
+              }
+            ]
+          }
+          Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.match(err.message, /Runnabot has no access to an org/)
+            assert.instanceOf(err, TaskFatalError)
+            done()
+          })
+        })
+
+        it('should return TaskFatalError if runnabot has reached rate limit', function (done) {
+          const githubError = new RateLimitedError('Runnabot has reached rate-limit')
+          GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
+          const instance = {
+            owner: {
+              github: 2828361,
+              username: 'Runnable'
+            },
+            masterPod: true,
+            contextVersions: [
+              {
+                appCodeVersions: [
+                  {
+                    repo: 'CodeNow/api',
+                    branch: 'feature1'
+                  }
+                ]
+              }
+            ]
+          }
+          Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.match(err.message, /Runnabot has reached rate-limit/)
+            assert.instanceOf(err, TaskFatalError)
             done()
           })
         })
