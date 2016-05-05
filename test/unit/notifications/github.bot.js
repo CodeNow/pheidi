@@ -10,6 +10,54 @@ const GitHub = require('models/github')
 
 describe('GitHubBot', function () {
   const ctx = {}
+
+  describe('#_getGitHubToken', function () {
+    beforeEach(function (done) {
+      ctx.originalGitHubTokens = process.env.RUNNABOT_GITHUB_ACCESS_TOKENS
+      done()
+    })
+    afterEach(function (done) {
+      process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = ctx.originalGitHubTokens
+      done()
+    })
+
+    it('should throw if access tokens are not defined', function (done) {
+      delete process.env.RUNNABOT_GITHUB_ACCESS_TOKENS
+      assert.throws(GitHubBot._getGitHubToken, 'Configuration error: runnabot gh access token is not defined')
+      done()
+    })
+
+    it('should throw if access tokens is not string', function (done) {
+      process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = 1
+      assert.throws(GitHubBot._getGitHubToken, 'Configuration error: runnabot gh access token is not defined')
+      done()
+    })
+
+    it('should return empty token if tokens are empty', function (done) {
+      process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = ''
+      assert.equal(GitHubBot._getGitHubToken(), '')
+      done()
+    })
+
+    it('should return 1 element if one token defined', function (done) {
+      process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = 'token1'
+      assert.equal(GitHubBot._getGitHubToken(), 'token1')
+      done()
+    })
+
+    it('should return 1 element if one token defined', function (done) {
+      const tokens = [
+        'token1',
+        'token2',
+        'token3',
+        'token4'
+      ]
+      process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = tokens.join(',')
+      assert.include(tokens, GitHubBot._getGitHubToken())
+      done()
+    })
+  })
+
   describe('#_deleteComments', function () {
     beforeEach(function (done) {
       ctx.comments = [
