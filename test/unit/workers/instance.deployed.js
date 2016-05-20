@@ -10,7 +10,6 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
-const clone = require('101/clone')
 const ObjectID = require('mongodb').ObjectID
 const TaskFatalError = require('ponos').TaskFatalError
 const Mongo = require('models/mongo')
@@ -50,11 +49,7 @@ describe('Instance Deployed Worker', function () {
       name: 'name1',
       shortHash: 'asd51a1',
       masterPod: true,
-      owner: {
-        github: 2828361,
-        username: 'codenow',
-        gravatar: ''
-      },
+      owner: owner,
       createdBy: {
         github: instanceCreatedById,
         username: 'runnabear',
