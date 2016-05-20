@@ -347,24 +347,6 @@ describe('Instance Deployed Worker', function () {
         })
       })
 
-      it('should fetch owner info from github if not defined', function (done) {
-        const instance = clone(testInstance)
-        instance.owner.username = null
-        Mongo.prototype.findOneInstanceAsync.resolves(instance)
-        Worker(testData).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.calledOnce(Slack.prototype.notifyOnAutoDeploy)
-          sinon.assert.calledWith(Slack.prototype.notifyOnAutoDeploy,
-            testCv.build.triggeredAction.appCodeVersion,
-            mockPushUser.accounts.github.username,
-            testInstance,
-            sinon.match.func)
-          const passedInstance = Slack.prototype.notifyOnAutoDeploy.getCall(0).args[2]
-          assert.equal(passedInstance.owner.username, owner.username)
-          done()
-        })
-      })
-
       it('should not call slack notification if settings was not found', function (done) {
         Mongo.prototype.findOneSettingAsync.returns(null)
         Worker(testData).asCallback(function (err) {
