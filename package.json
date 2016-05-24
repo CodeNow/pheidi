@@ -51,7 +51,7 @@
     "loadenv": "^2.1.0",
     "mongodb": "^2.1.16",
     "monitor-dog": "^1.5.0",
-    "ponos": "beta",
+    "ponos": "^3.1.0",
     "runnable-hostname": "git+ssh://git@github.com:CodeNow/runnable-hostname#v1.0.4",
     "slack-client": "~1.4.0",
     "underscore.string": "^3.3.4"
