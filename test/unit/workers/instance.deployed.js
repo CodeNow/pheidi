@@ -216,6 +216,17 @@ describe('Instance Deployed Worker', function () {
           })
         })
 
+        it('should reject when instance had no ownerUsername found with TaskFatalError', function (done) {
+          Mongo.prototype.findOneInstanceAsync.resolves({})
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.instanceOf(err, TaskFatalError)
+            assert.match(err.message, /instance owner username was not found/i)
+            done()
+          })
+        })
+
         it('should reject when context version not found with TaskFatalError', function (done) {
           Mongo.prototype.findOneContextVersionAsync.resolves(null)
 
@@ -276,7 +287,9 @@ describe('Instance Deployed Worker', function () {
         Worker(testData).asCallback(function (err) {
           assert.isNull(err)
           sinon.assert.calledOnce(Mongo.prototype.findOneInstanceAsync)
-          sinon.assert.calledWith(Mongo.prototype.findOneInstanceAsync, { _id: new ObjectID(testInstanceId) })
+          sinon.assert.calledWith(Mongo.prototype.findOneInstanceAsync, {
+            _id: new ObjectID(testInstanceId)
+          })
           done()
         })
       })
