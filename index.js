@@ -9,7 +9,7 @@ const workerServer = require('worker-server')
 const queueServer = require('queue-worker-server')
 const rabbitmq = require('rabbitmq')
 
-rabbitmq.publisher.connect()
+rabbitmq.publisher.connectAsync()
   .then(() => {
     log.info('rabbimq publisher started')
     return workerServer.start()
