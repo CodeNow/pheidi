@@ -110,7 +110,6 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).resolves(mockInstanceUser)
       sinon.stub(Slack.prototype, 'notifyOnAutoDeploy')
       sinon.createStubInstance(GitHubDeploy)
-      sinon.stub(GitHubDeploy.prototype, 'deploymentSucceeded')
       done()
     })
 
@@ -123,7 +122,6 @@ describe('Instance Deployed Worker', function () {
       Mongo.prototype.findOneUserAsync.restore()
       Github.prototype.getUserByIdAsync.restore()
       Slack.prototype.notifyOnAutoDeploy.restore()
-      GitHubDeploy.prototype.deploymentSucceeded.restore()
       done()
     })
 
@@ -330,17 +328,6 @@ describe('Instance Deployed Worker', function () {
         })
       })
 
-      it('should call pull request notification', function (done) {
-        Worker(testData).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.calledOnce(GitHubDeploy.prototype.deploymentSucceeded)
-          sinon.assert.calledWith(GitHubDeploy.prototype.deploymentSucceeded,
-            testCv.build.triggeredAction.appCodeVersion,
-            testInstance)
-          done()
-        })
-      })
-
       it('should not call slack notification if pushUser was not found', function (done) {
         Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).returns(null)
         Worker(testData).asCallback(function (err) {
@@ -404,8 +391,7 @@ describe('Instance Deployed Worker', function () {
             Mongo.prototype.findOneContextVersionAsync,
             Mongo.prototype.findOneUserAsync,
             Mongo.prototype.findOneSettingAsync,
-            Slack.prototype.notifyOnAutoDeploy,
-            GitHubDeploy.prototype.deploymentSucceeded
+            Slack.prototype.notifyOnAutoDeploy
           )
           done()
         })
