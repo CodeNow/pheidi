@@ -10,7 +10,7 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
-const WorkerStopError = require('error-cat/errors/worker-stop-error')
+const TaskFatalError = require('ponos').TaskFatalError
 const rabbitmq = require('rabbitmq')
 const Worker = require('workers/instance.updated')
 
@@ -85,7 +85,7 @@ describe('Instance Updated Worker', function () {
       it('should throw a task fatal error if the job is missing entirely', function (done) {
         Worker().asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /job.+required/i)
           done()
@@ -95,7 +95,7 @@ describe('Instance Updated Worker', function () {
       it('should throw a task fatal error if the job is not an object', function (done) {
         Worker(true).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /must be an object/i)
           done()
@@ -105,7 +105,7 @@ describe('Instance Updated Worker', function () {
       it('should throw a task fatal error if the job is missing a instance', function (done) {
         Worker({}).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /instance.*required/i)
           done()
@@ -115,7 +115,7 @@ describe('Instance Updated Worker', function () {
       it('should throw a task fatal error if the instance is not an object', function (done) {
         Worker({ instance: 1 }).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /instance.*object/i)
           done()
@@ -125,7 +125,7 @@ describe('Instance Updated Worker', function () {
       it('should throw a task fatal error if the instance owner is not defined', function (done) {
         Worker({ instance: {} }).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /owner.*required/i)
           done()
@@ -135,7 +135,7 @@ describe('Instance Updated Worker', function () {
       it('should throw a task fatal error if the instance owner.github is not defined', function (done) {
         Worker({ instance: { owner: {} } }).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /github.*required/i)
           done()
@@ -153,7 +153,7 @@ describe('Instance Updated Worker', function () {
         }
         Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /github.*number/i)
           done()
@@ -171,7 +171,7 @@ describe('Instance Updated Worker', function () {
         }
         Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /contextVersions.*required/i)
           done()
@@ -190,7 +190,7 @@ describe('Instance Updated Worker', function () {
         }
         Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /contextVersions.*array/i)
           done()
@@ -209,7 +209,7 @@ describe('Instance Updated Worker', function () {
         }
         Worker(payload).asCallback(function (err) {
           assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
+          assert.instanceOf(err, TaskFatalError)
           assert.isDefined(err.data.err)
           assert.match(err.data.err.message, /context version.*must be an object/i)
           done()
