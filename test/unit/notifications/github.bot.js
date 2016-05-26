@@ -692,6 +692,29 @@ describe('GitHubBot', function () {
     })
   })
 
+  describe('#_renderIsolatedInstance', function () {
+    it('should return empty string if null was passed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const md = githubBot._renderIsolatedInstance(null)
+      assert.equal(md, '')
+      done()
+    })
+
+    it('should return empty string if empty string was passed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const md = githubBot._renderIsolatedInstance('')
+      assert.equal(md, '')
+      done()
+    })
+
+    it('should return empty string if empty array was passed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const md = githubBot._renderIsolatedInstance([])
+      assert.equal(md, '')
+      done()
+    })
+  })
+
   describe('#deleteAllNotifications', function () {
     beforeEach(function (done) {
       ctx.prs = [
