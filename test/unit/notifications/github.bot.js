@@ -713,6 +713,25 @@ describe('GitHubBot', function () {
       assert.equal(md, '')
       done()
     })
+
+    it('should return md with two items if array has two elements', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const insts = [
+        {
+          name: 'inst-1',
+          owner: { username: 'codenow' }
+        },
+        {
+          name: 'inst-2',
+          owner: { username: 'codenow' }
+        }
+      ]
+      const md = githubBot._renderIsolatedInstance(insts)
+      let expectedMd = '\n\nIsolated instances:\n - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)'
+      expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
+      assert.equal(md, expectedMd)
+      done()
+    })
   })
 
   describe('#deleteAllNotifications', function () {
