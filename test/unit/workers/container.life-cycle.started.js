@@ -14,7 +14,6 @@ const assert = chai.assert
 const Worker = require('workers/container.life-cycle.started')
 
 describe('Container life-cycle started', () => {
-
   describe('Worker', () => {
     const mockMainAcv = {
       id: 'mainAcv'
