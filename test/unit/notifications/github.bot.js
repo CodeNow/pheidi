@@ -686,7 +686,8 @@ describe('GitHubBot', function () {
       }
       const md = githubBot._render(gitInfo, instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
       var result = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
-      result += '\n\nIsolated instances:\n - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
+      result += '\n\nhere are the other containers in your cluster:\n'
+      result += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
       assert.equal(md, result)
       done()
     })
@@ -727,7 +728,8 @@ describe('GitHubBot', function () {
         }
       ]
       const md = githubBot._renderIsolatedInstance(insts)
-      let expectedMd = '\n\nIsolated instances:\n - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)\n'
+      let expectedMd = '\n\nhere are the other containers in your cluster:\n'
+      expectedMd += ' - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)\n'
       expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
       assert.equal(md, expectedMd)
       done()
