@@ -3,6 +3,7 @@
 const chai = require('chai')
 const GitHubStatus = require('notifications/github.status')
 const mongodbHelper = require('mongo-helper')
+const PreconditionError = require('notifications/github.status').PreconditionError
 const Promise = require('bluebird')
 const sinon = require('sinon')
 const TaskFatalError = require('ponos').TaskFatalError
@@ -113,6 +114,18 @@ describe('Container life-cycle started', () => {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHubStatus.prototype.setStatus)
         sinon.assert.calledWith(GitHubStatus.prototype.setStatus, mockInstance, mockMainAcv, 'pending')
+        done()
+      })
+    })
+
+    it('should throw task fatal when PreconditionError is returned from setStatus', function (done) {
+      var err = new PreconditionError('Precondition failed')
+      GitHubStatus.prototype.setStatus.rejects(err)
+      Worker(mockParams).asCallback((err) => {
+        assert.isDefined(err)
+        assert.instanceOf(err, TaskFatalError)
+        assert.match(err.message, /precondition/i)
+        assert.instanceOf(err.data.originalError, PreconditionError)
         done()
       })
     })

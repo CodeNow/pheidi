@@ -3,6 +3,7 @@
 const chai = require('chai')
 const GitHubStatus = require('notifications/github.status')
 const mongodbHelper = require('mongo-helper')
+const PreconditionError = require('notifications/github.status').PreconditionError
 const Promise = require('bluebird')
 const sinon = require('sinon')
 const TaskFatalError = require('ponos').TaskFatalError
@@ -47,6 +48,7 @@ describe('Container life-cycle died', () => {
       }
     }
     let mongoHelperStubs
+
     beforeEach((done) => {
       mongoHelperStubs = {
         findOneInstanceAsync: sinon.stub().resolves(mockInstance)
@@ -128,6 +130,18 @@ describe('Container life-cycle died', () => {
         done()
       })
     })
+
+    it('should throw task fatal when PreconditionError is returned from setStatus', function (done) {
+      var err = new PreconditionError('Precondition failed')
+      GitHubStatus.prototype.setStatus.rejects(err)
+      Worker(mockParams).asCallback((err) => {
+        assert.isDefined(err)
+        assert.instanceOf(err, TaskFatalError)
+        assert.match(err.message, /precondition/i)
+        assert.instanceOf(err.data.originalError, PreconditionError)
+        done()
+      })
+    })
   })
   describe('calculateStatus', () => {
     it('should return failure for failed image builder container', function (done) {
@@ -146,6 +160,7 @@ describe('Container life-cycle died', () => {
       assert.equal(Worker.calculateStatus(mockJob), 'failure')
       done()
     })
+
     it('should return null for successful image builder container', function (done) {
       const mockJob = {
         inspectData: {
@@ -162,6 +177,7 @@ describe('Container life-cycle died', () => {
       assert.equal(Worker.calculateStatus(mockJob), null)
       done()
     })
+
     it('should return success for completed user container', function (done) {
       const mockJob = {
         inspectData: {
@@ -178,6 +194,7 @@ describe('Container life-cycle died', () => {
       assert.equal(Worker.calculateStatus(mockJob), 'success')
       done()
     })
+
     it('should return error for completed user container', function (done) {
       const mockJob = {
         inspectData: {
