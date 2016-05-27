@@ -17,7 +17,7 @@ const Worker = require('workers/container.life-cycle.died')
 
 describe('Container life-cycle died Worker', () => {
   const testInstance = {
-    _id: '1234',
+    _id: 'deadbeefdead',
     isTesting: true
   }
   const testParams = {
@@ -26,7 +26,7 @@ describe('Container life-cycle died Worker', () => {
       Config: {
         Labels: {
           type: 'image-builder-container',
-          instanceId: '1234'
+          instanceId: testInstance._id
         }
       }
     }
@@ -54,9 +54,8 @@ describe('Container life-cycle died Worker', () => {
       assert.isDefined(err)
       assert.instanceOf(err, TaskFatalError)
       assert.match(err.message, /not for testing/i)
-      assert(err.report).equals(false)
+      assert.isFalse(err.data.report)
       done()
     })
-    done()
   })
 })
