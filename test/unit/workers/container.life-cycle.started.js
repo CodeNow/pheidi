@@ -11,9 +11,9 @@ require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
 
-const Worker = require('workers/container.life-cycle.died')
+const Worker = require('workers/container.life-cycle.started')
 
-describe('Container life-cycle died', () => {
+describe('Container life-cycle started', () => {
 
   describe('Worker', () => {
     const mockMainAcv = {
@@ -32,7 +32,6 @@ describe('Container life-cycle died', () => {
         ]
       }
     }
-    const mockStatus = 'calculatedStatus'
     const mockGithubStatusResponse = {
       id: 'mockGithubStatusResponse'
     }
@@ -53,14 +52,12 @@ describe('Container life-cycle died', () => {
         findOneInstanceAsync: sinon.stub().resolves(mockInstance)
       }
       sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
-      sinon.stub(Worker, 'calculateStatus').returns(mockStatus)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
       done()
     })
 
     afterEach((done) => {
       mongodbHelper.helper.restore()
-      Worker.calculateStatus.restore()
       GitHubStatus.prototype.setStatus.restore()
       done()
     })
@@ -112,88 +109,13 @@ describe('Container life-cycle died', () => {
       })
     })
 
-    it('should calculate the status', (done) => {
-      Worker(mockParams).asCallback((err) => {
-        assert.isNull(err)
-        sinon.assert.calledOnce(Worker.calculateStatus)
-        sinon.assert.calledWith(Worker.calculateStatus, mockParams)
-        done()
-      })
-    })
-
     it('should try to set the status in github', (done) => {
       Worker(mockParams).asCallback((err) => {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHubStatus.prototype.setStatus)
-        sinon.assert.calledWith(GitHubStatus.prototype.setStatus, mockInstance, mockMainAcv, mockStatus)
+        sinon.assert.calledWith(GitHubStatus.prototype.setStatus, mockInstance, mockMainAcv, 'pending')
         done()
       })
-    })
-  })
-  describe('calculateStatus', () => {
-    it('should return failure for failed image builder container', function (done) {
-      const mockJob = {
-        inspectData: {
-          State: {
-            ExitCode: -1
-          },
-          Config: {
-            Labels: {
-              type: 'image-builder-container'
-            }
-          }
-        }
-      }
-      assert.equal(Worker.calculateStatus(mockJob), 'failure')
-      done()
-    })
-    it('should return null for successful image builder container', function (done) {
-      const mockJob = {
-        inspectData: {
-          State: {
-            ExitCode: 0
-          },
-          Config: {
-            Labels: {
-              type: 'image-builder-container'
-            }
-          }
-        }
-      }
-      assert.equal(Worker.calculateStatus(mockJob), null)
-      done()
-    })
-    it('should return success for completed user container', function (done) {
-      const mockJob = {
-        inspectData: {
-          State: {
-            ExitCode: 0
-          },
-          Config: {
-            Labels: {
-              type: 'user-container'
-            }
-          }
-        }
-      }
-      assert.equal(Worker.calculateStatus(mockJob), 'success')
-      done()
-    })
-    it('should return error for completed user container', function (done) {
-      const mockJob = {
-        inspectData: {
-          State: {
-            ExitCode: -1
-          },
-          Config: {
-            Labels: {
-              type: 'user-container'
-            }
-          }
-        }
-      }
-      assert.equal(Worker.calculateStatus(mockJob), 'error')
-      done()
     })
   })
 })
