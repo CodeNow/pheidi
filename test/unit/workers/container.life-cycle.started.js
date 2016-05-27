@@ -1,6 +1,7 @@
 'use strict'
 
 const chai = require('chai')
+const FatalGithubError = require('notifications/github.status').FatalGithubError
 const GitHubStatus = require('notifications/github.status')
 const mongodbHelper = require('mongo-helper')
 const PreconditionError = require('notifications/github.status').PreconditionError
@@ -126,6 +127,18 @@ describe('Container life-cycle started', () => {
         assert.instanceOf(err, TaskFatalError)
         assert.match(err.message, /precondition/i)
         assert.instanceOf(err.data.originalError, PreconditionError)
+        done()
+      })
+    })
+
+    it('should throw task fatal when FatalGithubError is returned from setStatus', function (done) {
+      var err = new FatalGithubError('You are not a github user or something')
+      GitHubStatus.prototype.setStatus.rejects(err)
+      Worker(mockParams).asCallback((err) => {
+        assert.isDefined(err)
+        assert.instanceOf(err, TaskFatalError)
+        assert.match(err.message, /Github error/i)
+        assert.instanceOf(err.data.originalError, FatalGithubError)
         done()
       })
     })
