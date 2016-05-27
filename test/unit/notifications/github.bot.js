@@ -727,7 +727,7 @@ describe('GitHubBot', function () {
         }
       ]
       const md = githubBot._renderIsolatedInstance(insts)
-      let expectedMd = '\n\nIsolated instances:\n - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)'
+      let expectedMd = '\n\nIsolated instances:\n - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)\n'
       expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
       assert.equal(md, expectedMd)
       done()
