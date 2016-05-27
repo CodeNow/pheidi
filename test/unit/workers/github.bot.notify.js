@@ -11,6 +11,7 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const AccessDeniedError = require('models/access-denied-error')
+const Mongo = require('models/mongo')
 const RateLimitedError = require('models/rate-limited-error')
 const TaskFatalError = require('ponos').TaskFatalError
 const GitHubBot = require('notifications/github.bot')
@@ -18,6 +19,18 @@ const Worker = require('workers/github.bot.notify')
 
 describe('GitHub Bot Notify Worker', function () {
   describe('worker', function () {
+    beforeEach(function (done) {
+      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'findInstancesAsync').resolves([])
+      done()
+    })
+    afterEach(function (done) {
+      Mongo.prototype.connect.restore()
+      Mongo.prototype.close.restore()
+      Mongo.prototype.findInstancesAsync.restore()
+      done()
+    })
     describe('invalid Job', function () {
       it('should throw a task fatal error if the job is missing entirely', function (done) {
         Worker().asCallback(function (err) {

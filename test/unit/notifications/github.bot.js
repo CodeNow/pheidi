@@ -189,7 +189,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -214,7 +214,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -240,7 +240,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -263,7 +263,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
@@ -298,7 +298,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
@@ -337,7 +337,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComment(gitInfo, instance, function (error) {
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
@@ -388,7 +388,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComments(gitInfo, instance, function (err) {
+      githubBot._upsertComments(gitInfo, instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -413,7 +413,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComments(gitInfo, instance, function (err) {
+      githubBot._upsertComments(gitInfo, instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -436,7 +436,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot._upsertComments(gitInfo, instance, function (err) {
+      githubBot._upsertComments(gitInfo, instance, [], function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
         sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
@@ -449,9 +449,9 @@ describe('GitHubBot', function () {
         const pushInfo2 = clone(gitInfo)
         pushInfo2.number = 2
         sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
-          pushInfo1, instance, sinon.match.func)
+          pushInfo1, instance, [], sinon.match.func)
         sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
-          pushInfo2, instance, sinon.match.func)
+          pushInfo2, instance, [], sinon.match.func)
         done()
       })
     })
@@ -495,7 +495,7 @@ describe('GitHubBot', function () {
           shortHash: 'ga71a12',
           masterPod: true
         }
-        githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
+        githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
@@ -522,7 +522,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -547,7 +547,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -570,7 +570,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      githubBot.notifyOnUpdate(gitInfo, instance, function (err) {
+      githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
         sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
@@ -578,7 +578,7 @@ describe('GitHubBot', function () {
           sinon.match.func)
         sinon.assert.calledOnce(GitHubBot.prototype._upsertComments)
         sinon.assert.calledWith(GitHubBot.prototype._upsertComments,
-          gitInfo, instance, sinon.match.func)
+          gitInfo, instance, [], sinon.match.func)
         done()
       })
     })
@@ -665,6 +665,71 @@ describe('GitHubBot', function () {
       }
       const md = githubBot._render(gitInfo, instance)
       assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      done()
+    })
+
+    it('should return correct message for the isolated group', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'running'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      const md = githubBot._render(gitInfo, instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
+      var result = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
+      result += '\n\nIsolated instances:\n - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
+      assert.equal(md, result)
+      done()
+    })
+  })
+
+  describe('#_renderIsolatedInstance', function () {
+    it('should return empty string if null was passed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const md = githubBot._renderIsolatedInstance(null)
+      assert.equal(md, '')
+      done()
+    })
+
+    it('should return empty string if empty string was passed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const md = githubBot._renderIsolatedInstance('')
+      assert.equal(md, '')
+      done()
+    })
+
+    it('should return empty string if empty array was passed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const md = githubBot._renderIsolatedInstance([])
+      assert.equal(md, '')
+      done()
+    })
+
+    it('should return md with two items if array has two elements', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const insts = [
+        {
+          name: 'inst-1',
+          owner: { username: 'codenow' }
+        },
+        {
+          name: 'inst-2',
+          owner: { username: 'codenow' }
+        }
+      ]
+      const md = githubBot._renderIsolatedInstance(insts)
+      let expectedMd = '\n\nIsolated instances:\n - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)'
+      expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
+      assert.equal(md, expectedMd)
       done()
     })
   })

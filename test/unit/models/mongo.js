@@ -3,20 +3,20 @@
 require('loadenv')({ debugName: 'pheidi:test' })
 
 // external
-var chai = require('chai')
-var fs = require('fs')
-var MongoClient = require('mongodb').MongoClient
-var sinon = require('sinon')
+const chai = require('chai')
+const fs = require('fs')
+const MongoClient = require('mongodb').MongoClient
+const sinon = require('sinon')
 
 // internal (being tested)
-var MongoDB = require('models/mongo')
+const MongoDB = require('models/mongo')
 
-var assert = chai.assert
+const assert = chai.assert
 
 describe('Mongo Model', function () {
-  var prevCACert = process.env.MONGO_CACERT
-  var prevCert = process.env.MONGO_CERT
-  var prevKey = process.env.MONGO_KEY
+  const prevCACert = process.env.MONGO_CACERT
+  const prevCert = process.env.MONGO_CERT
+  const prevKey = process.env.MONGO_KEY
 
   beforeEach(function () {
     delete process.env.MONGO_CACERT
@@ -47,7 +47,7 @@ describe('Mongo Model', function () {
       })
 
       it('should read the certificates', function () {
-        var m = new MongoDB()
+        const m = new MongoDB()
         assert.ok(m)
         sinon.assert.calledThrice(fs.readFileSync)
         sinon.assert.calledWith(fs.readFileSync, 'cacert')
@@ -57,7 +57,7 @@ describe('Mongo Model', function () {
     })
 
     it('should not read certs by default', function () {
-      var m = new MongoDB()
+      const m = new MongoDB()
       assert.ok(m)
       sinon.assert.notCalled(fs.readFileSync)
     })
