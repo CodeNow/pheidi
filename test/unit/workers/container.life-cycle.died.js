@@ -20,6 +20,22 @@ describe('Container life-cycle died', () => {
     const mockMainAcv = {
       id: 'mainAcv'
     }
+    const mockStatus = 'calculatedStatus'
+    const mockGithubStatusResponse = {
+      id: 'mockGithubStatusResponse'
+    }
+    const mockParams = {
+      id: 'fakeId',
+      inspectData: {
+        Config: {
+          Labels: {
+            type: 'user-container',
+            instanceId: 'deadbeefdead'
+          }
+        },
+        Id: 'mockContainerId'
+      }
+    }
     const mockInstance = {
       _id: 'deadbeefdead',
       isTesting: true,
@@ -31,21 +47,9 @@ describe('Container life-cycle died', () => {
           },
           mockMainAcv
         ]
-      }
-    }
-    const mockStatus = 'calculatedStatus'
-    const mockGithubStatusResponse = {
-      id: 'mockGithubStatusResponse'
-    }
-    const mockParams = {
-      id: 'fakeId',
-      inspectData: {
-        Config: {
-          Labels: {
-            type: 'image-builder-container',
-            instanceId: mockInstance._id
-          }
-        }
+      },
+      container: {
+        dockerContainer: mockParams.inspectData.Id
       }
     }
     let mongoHelperStubs
@@ -87,6 +91,23 @@ describe('Container life-cycle died', () => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)
         assert.match(err.message, /not for testing/i)
+        assert.isFalse(err.data.report)
+        done()
+      })
+    })
+
+    it('should fail if the instance does not have the user container attached', (done) => {
+      mongoHelperStubs.findOneInstanceAsync.resolves({
+        _id: '1234',
+        isTesting: true,
+        container: {
+          dockerContainer: 'nonMatchingDockerContainer'
+        }
+      })
+      Worker(mockParams).asCallback((err) => {
+        assert.isDefined(err)
+        assert.instanceOf(err, TaskFatalError)
+        assert.match(err.message, /not attached/i)
         assert.isFalse(err.data.report)
         done()
       })
