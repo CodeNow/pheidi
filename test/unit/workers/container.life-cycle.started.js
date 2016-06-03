@@ -48,9 +48,19 @@ describe('Container life-cycle started', () => {
       }
     }
     let mongoHelperStubs
+    let collectionFindStub
+
     beforeEach((done) => {
+      sinon.stub(Promise.prototype, 'delay').resolves()
+      collectionFindStub = sinon.stub().yields(null, [mockInstance])
       mongoHelperStubs = {
-        findOneInstanceAsync: sinon.stub().resolves(mockInstance)
+        db: {
+          collection: sinon.stub().returns({
+            find: sinon.stub().returns({
+              toArray: collectionFindStub
+            })
+          })
+        }
       }
       sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
@@ -58,13 +68,14 @@ describe('Container life-cycle started', () => {
     })
 
     afterEach((done) => {
+      Promise.prototype.delay.restore()
       mongodbHelper.helper.restore()
       GitHubStatus.prototype.setStatus.restore()
       done()
     })
 
     it('should fail if no instance is found', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves()
+      collectionFindStub.yields(null)
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)
@@ -74,22 +85,8 @@ describe('Container life-cycle started', () => {
       })
     })
 
-    it('should fail if the instance is not for testing', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves({
-        _id: '1234',
-        isTesting: false
-      })
-      Worker(mockParams).asCallback((err) => {
-        assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
-        assert.match(err.message, /not for testing/i)
-        assert.isFalse(err.data.report)
-        done()
-      })
-    })
-
     it('should fail if the instance has no main acv', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves({
+      collectionFindStub.yields(null, [{
         _id: '1234',
         isTesting: true,
         contextVersion: {
@@ -100,7 +97,7 @@ describe('Container life-cycle started', () => {
             }
           ]
         }
-      })
+      }])
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)

@@ -53,10 +53,18 @@ describe('Container life-cycle died', () => {
       }
     }
     let mongoHelperStubs
+    let collectionFindStub
 
     beforeEach((done) => {
+      collectionFindStub = sinon.stub().yields(null, [mockInstance])
       mongoHelperStubs = {
-        findOneInstanceAsync: sinon.stub().resolves(mockInstance)
+        db: {
+          collection: sinon.stub().returns({
+            find: sinon.stub().returns({
+              toArray: collectionFindStub
+            })
+          })
+        }
       }
       sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
       sinon.stub(Worker, 'calculateStatus').returns(mockStatus)
@@ -72,7 +80,7 @@ describe('Container life-cycle died', () => {
     })
 
     it('should fail if no instance is found', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves()
+      collectionFindStub.yields()
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)
@@ -82,28 +90,14 @@ describe('Container life-cycle died', () => {
       })
     })
 
-    it('should fail if the instance is not for testing', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves({
-        _id: '1234',
-        isTesting: false
-      })
-      Worker(mockParams).asCallback((err) => {
-        assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
-        assert.match(err.message, /not for testing/i)
-        assert.isFalse(err.data.report)
-        done()
-      })
-    })
-
     it('should fail if the instance does not have the user container attached', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves({
+      collectionFindStub.yields(null, [{
         _id: '1234',
         isTesting: true,
         container: {
           dockerContainer: 'nonMatchingDockerContainer'
         }
-      })
+      }])
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)
@@ -114,7 +108,7 @@ describe('Container life-cycle died', () => {
     })
 
     it('should fail if the instance has no main acv', (done) => {
-      mongoHelperStubs.findOneInstanceAsync.resolves({
+      collectionFindStub.yields(null, [{
         _id: '1234',
         isTesting: true,
         contextVersion: {
@@ -125,7 +119,7 @@ describe('Container life-cycle died', () => {
             }
           ]
         }
-      })
+      }])
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)
