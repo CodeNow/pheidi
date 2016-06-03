@@ -14,7 +14,7 @@ var sinon = require('sinon')
 var MongoDB = require('models/mongo')
 
 // internal (being tested)
-var mongodbHelper = require('mongo-helper')
+var mongodbHelper = require('mongo-helper').helper
 
 describe('MongoDB Helper', function () {
   beforeEach(function () {
