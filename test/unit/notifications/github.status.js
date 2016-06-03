@@ -1,6 +1,5 @@
 'use strict'
 
-const assert = chai.assert
 const chai = require('chai')
 const GitHub = require('models/github')
 const GithubStatus = require('notifications/github.status')
@@ -8,6 +7,7 @@ const mongodbHelper = require('mongo-helper')
 const sinon = require('sinon')
 
 chai.use(require('chai-as-promised'))
+const assert = chai.assert
 const githubStatus = new GithubStatus()
 
 describe('github.status', () => {
