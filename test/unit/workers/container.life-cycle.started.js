@@ -79,12 +79,23 @@ describe('Container life-cycle started', () => {
       done()
     })
 
-    it('should fail if no instance is found', (done) => {
+    it('should fail if no context version is found', (done) => {
       collectionFindStub.yields(null)
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, TaskFatalError)
         assert.match(err.message, /not found/i)
+        assert.isFalse(err.data.report)
+        done()
+      })
+    })
+
+    it('should fail if no instance is found', (done) => {
+      mongoHelperStubs.findOneContextVersionAsync.resolves()
+      Worker(mockParams).asCallback((err) => {
+        assert.isDefined(err)
+        assert.instanceOf(err, TaskFatalError)
+        assert.match(err.message, /context version/i)
         assert.isFalse(err.data.report)
         done()
       })
