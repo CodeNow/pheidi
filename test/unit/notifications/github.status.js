@@ -43,7 +43,7 @@ describe('github.status', () => {
         lowerRepo: 'foo/hello',
         commit: 'commitsha'
       }
-      mockState = 'newState'
+      mockState = 'success'
       mongoHelperStubs = {
         findOneUserAsync: sinon.stub().resolves(mockUser)
       }
@@ -108,6 +108,16 @@ describe('github.status', () => {
           assert.isNull(err)
           sinon.assert.calledOnce(GitHub.prototype.createStatus)
           sinon.assert.calledWith(GitHub.prototype.createStatus, mockInstance, mockMainACV, mockState, mockMessage)
+          done()
+        })
+    })
+
+    it('should create a github status with default message', function (done) {
+      githubStatus.setStatus(mockInstance, mockMainACV, mockState)
+        .asCallback((err) => {
+          assert.isNull(err)
+          sinon.assert.calledOnce(GitHub.prototype.createStatus)
+          sinon.assert.calledWith(GitHub.prototype.createStatus, mockInstance, mockMainACV, mockState, 'Tests completed successfully')
           done()
         })
     })
