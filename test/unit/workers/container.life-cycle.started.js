@@ -49,7 +49,7 @@ describe('Container life-cycle started', () => {
     }
     const mockCv = {
       _id: 'cv id',
-      context: 'mock context id'
+      context: 'deadbeefdead'
     }
     let mongoHelperStubs
     let collectionFindStub
