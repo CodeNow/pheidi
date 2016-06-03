@@ -47,6 +47,10 @@ describe('Container life-cycle started', () => {
         }
       }
     }
+    const mockCv = {
+      _id: 'cv id',
+      context: 'mock context id'
+    }
     let mongoHelperStubs
     let collectionFindStub
 
@@ -54,6 +58,7 @@ describe('Container life-cycle started', () => {
       sinon.stub(Promise.prototype, 'delay').resolves()
       collectionFindStub = sinon.stub().yields(null, [mockInstance])
       mongoHelperStubs = {
+        findOneContextVersionAsync: sinon.stub().resolves(mockCv),
         db: {
           collection: sinon.stub().returns({
             find: sinon.stub().returns({
