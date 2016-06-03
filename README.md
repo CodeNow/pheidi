@@ -30,16 +30,13 @@ Pheidi subscribed to:
         - runnabot will comment on PR that instance is stopped (crashed or stopped manually)
       - failed 
         - runnabot will comment on PR that instance build has failed
-        - mark commit in github as `failed`
       - running
         - runnabot will comment on PR that instance running successfully
   3. `instance.deleted` event (fired by API).
     - Delete @runnabot messages for the linked PR (if forked instance is being deleted) or PRs (if master instance is being deleted) 
-  4. `container.life-cycle.created` event (fired by Docker Listener). 
-    - If this is a build container mark the commit in github as `pending`
   5. `container.life-cycle.started` event (fired by Docker Listener).
     - Mark the commit in github as `pending`
   6. `container.life-cycle.died` event (fired by Docker Listener). 
-    - If build container and status is failure mark commit in github as `failed.
+    - If build container and status is failure mark commit in github as `failed`.
     - If user container and status is 0 mark commit in github as `success`
     - If user container and status is non 0 mark commit in github as `error`
