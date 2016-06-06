@@ -227,6 +227,17 @@ describe('Instance Deployed Worker', function () {
           })
         })
 
+        it('should reject when instance had no ownerUsername found with WorkerStopError', function (done) {
+          Mongo.prototype.findOneInstanceAsync.resolves({})
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.instanceOf(err, WorkerStopError)
+            assert.match(err.message, /instance owner username was not found/i)
+            done()
+          })
+        })
+
         it('should return an error if instanceUser lookup failed', function (done) {
           const mongoError = new Error('Mongo failed')
           Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': instanceCreatedById }).rejects(mongoError)
