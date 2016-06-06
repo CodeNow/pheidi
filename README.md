@@ -20,10 +20,23 @@ Currently there is integration with Slack and GitHub Pull Requests. In the long-
 
 Pheidi subscribed to:
 
-  1. `instance.deployed` event (fired by API). Upon receiving this event Pheidi will try deliver message to the Slack that context version was deployed to the instance
-  2. `instance.updated` event (fired by API). Upon receiving this event Pheidi will try send 4 different types of messages using @runnabot to the appropriate GitHub PR page:
-   - building - runnabot will comment on PR that instance is building
-   - stopped - runnabot will comment on PR that instance is stopped (crashed or stopped manually)
-   - failed - runnabot will comment on PR that instance build has failed
-   - running - runnabot will comment on PR that instance running successfully
-  3. `instance.deleted` event (fired by API). Upon receiving this even Pheidi will try to delete @runnabot messages for the linked PR (if forked instance is being deleted) or PRs(if master instance is being deleted) 
+  1. `instance.deployed` event (fired by API).
+    - Deliver message to the Slack that context version was deployed to the instance
+  2. `instance.updated` event (fired by API). 
+    - Send 4 different types of messages using @runnabot to the appropriate GitHub PR page:
+      - building 
+        - runnabot will comment on PR that instance is building
+      - stopped 
+        - runnabot will comment on PR that instance is stopped (crashed or stopped manually)
+      - failed 
+        - runnabot will comment on PR that instance build has failed
+      - running
+        - runnabot will comment on PR that instance running successfully
+  3. `instance.deleted` event (fired by API).
+    - Delete @runnabot messages for the linked PR (if forked instance is being deleted) or PRs (if master instance is being deleted) 
+  5. `container.life-cycle.started` event (fired by Docker Listener).
+    - Mark the commit in github as `pending`
+  6. `container.life-cycle.died` event (fired by Docker Listener). 
+    - If build container and status is failure mark commit in github as `failed`.
+    - If user container and status is 0 mark commit in github as `success`
+    - If user container and status is non 0 mark commit in github as `error`
