@@ -11,7 +11,7 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const ObjectID = require('mongodb').ObjectID
-const TaskFatalError = require('ponos').TaskFatalError
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const Mongo = require('models/mongo')
 const GitHubDeploy = require('notifications/github.deploy')
 const Slack = require('notifications/slack')
@@ -124,7 +124,7 @@ describe('Instance Deployed Worker', function () {
         it('should throw a task fatal error if the job is missing entirely', function (done) {
           Worker().asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.isDefined(err.data.err)
             assert.match(err.data.err.message, /job.+required/i)
             done()
@@ -134,7 +134,7 @@ describe('Instance Deployed Worker', function () {
         it('should throw a task fatal error if the job is missing a instanceId', function (done) {
           Worker({}).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.isDefined(err.data.err)
             assert.match(err.data.err.message, /instanceId.*required/i)
             done()
@@ -144,7 +144,7 @@ describe('Instance Deployed Worker', function () {
         it('should throw a task fatal error if the job is not an object', function (done) {
           Worker(true).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.isDefined(err.data.err)
             assert.match(err.data.err.message, /must be an object/i)
             done()
@@ -154,7 +154,7 @@ describe('Instance Deployed Worker', function () {
         it('should throw a task fatal error if the instanceId is not a string', function (done) {
           Worker({ instanceId: {} }).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.isDefined(err.data.err)
             assert.match(err.data.err.message, /instanceId.*string/i)
             done()
@@ -164,7 +164,7 @@ describe('Instance Deployed Worker', function () {
         it('should throw a task fatal error if job is missing cvId', function (done) {
           Worker({ instanceId: testInstanceId }).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.isDefined(err.data.err)
             assert.match(err.data.err.message, /cvId.*required/i)
             done()
@@ -174,7 +174,7 @@ describe('Instance Deployed Worker', function () {
         it('should throw a task fatal error if job is missing cvId', function (done) {
           Worker({ instanceId: testInstanceId, cvId: {} }).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.isDefined(err.data.err)
             assert.match(err.data.err.message, /cvId.*string/i)
             done()
@@ -205,35 +205,35 @@ describe('Instance Deployed Worker', function () {
           })
         })
 
-        it('should reject when instance not found with TaskFatalError', function (done) {
+        it('should reject when instance not found with WorkerStopError', function (done) {
           Mongo.prototype.findOneInstanceAsync.resolves(null)
 
           Worker(testData).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.match(err.message, /instance not found/i)
             done()
           })
         })
 
-        it('should reject when instance had no ownerUsername found with TaskFatalError', function (done) {
-          Mongo.prototype.findOneInstanceAsync.resolves({})
-
-          Worker(testData).asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
-            assert.match(err.message, /instance owner username was not found/i)
-            done()
-          })
-        })
-
-        it('should reject when context version not found with TaskFatalError', function (done) {
+        it('should reject when context version not found with WorkerStopError', function (done) {
           Mongo.prototype.findOneContextVersionAsync.resolves(null)
 
           Worker(testData).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.match(err.message, /contextversion not found/i)
+            done()
+          })
+        })
+
+        it('should reject when instance had no ownerUsername found with WorkerStopError', function (done) {
+          Mongo.prototype.findOneInstanceAsync.resolves({})
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.instanceOf(err, WorkerStopError)
+            assert.match(err.message, /instance owner username was not found/i)
             done()
           })
         })
@@ -276,7 +276,7 @@ describe('Instance Deployed Worker', function () {
 
           Worker(testData).asCallback(function (err) {
             assert.isDefined(err)
-            assert.instanceOf(err, TaskFatalError)
+            assert.instanceOf(err, WorkerStopError)
             assert.match(err.message, /Instance creator not found/i)
             done()
           })

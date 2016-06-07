@@ -7,7 +7,7 @@ const mongodbHelper = require('mongo-helper')
 const PreconditionError = require('notifications/github.status').PreconditionError
 const Promise = require('bluebird')
 const sinon = require('sinon')
-const TaskFatalError = require('ponos').TaskFatalError
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
 
 require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
@@ -83,9 +83,8 @@ describe('Container life-cycle started', () => {
       collectionFindStub.yields(null)
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
+        assert.instanceOf(err, WorkerStopError)
         assert.match(err.message, /not found/i)
-        assert.isFalse(err.data.report)
         done()
       })
     })
@@ -94,9 +93,8 @@ describe('Container life-cycle started', () => {
       mongoHelperStubs.findOneContextVersionAsync.resolves()
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
+        assert.instanceOf(err, WorkerStopError)
         assert.match(err.message, /context version/i)
-        assert.isFalse(err.data.report)
         done()
       })
     })
@@ -116,9 +114,8 @@ describe('Container life-cycle started', () => {
       }])
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
+        assert.instanceOf(err, WorkerStopError)
         assert.match(err.message, /not a repo based/i)
-        assert.isFalse(err.data.report)
         done()
       })
     })
@@ -137,7 +134,7 @@ describe('Container life-cycle started', () => {
       GitHubStatus.prototype.setStatus.rejects(err)
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
+        assert.instanceOf(err, WorkerStopError)
         assert.match(err.message, /precondition/i)
         assert.instanceOf(err.data.originalError, PreconditionError)
         done()
@@ -149,7 +146,7 @@ describe('Container life-cycle started', () => {
       GitHubStatus.prototype.setStatus.rejects(err)
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
-        assert.instanceOf(err, TaskFatalError)
+        assert.instanceOf(err, WorkerStopError)
         assert.match(err.message, /Github error/i)
         assert.instanceOf(err.data.originalError, FatalGithubError)
         done()
