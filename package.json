@@ -50,6 +50,7 @@
     "joi": "^8.0.5",
     "keypather": "^2.0.0",
     "loadenv": "^2.1.0",
+    "lru-cache": "^4.0.1",
     "mongodb": "^2.1.16",
     "monitor-dog": "^1.5.0",
     "ponos": "^4.2.1",
