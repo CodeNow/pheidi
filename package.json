@@ -43,7 +43,6 @@
     "async": "^1.5.2",
     "bluebird": "^3.3.4",
     "bunyan": "^1.8.1",
-    "callsite": "^1.0.0",
     "continuation-local-storage": "^3.1.7",
     "defaults": "^1.0.3",
     "error-cat": "^3.0.0",
