@@ -42,7 +42,8 @@
     "101": "^1.5.0",
     "async": "^1.5.2",
     "bluebird": "^3.3.4",
-    "bunyan": "^1.8.0",
+    "bunyan": "^1.8.1",
+    "continuation-local-storage": "^3.1.7",
     "defaults": "^1.0.3",
     "error-cat": "^3.0.0",
     "github4": "1.1.0",
@@ -51,7 +52,7 @@
     "loadenv": "^2.1.0",
     "mongodb": "^2.1.16",
     "monitor-dog": "^1.5.0",
-    "ponos": "^4.0.0",
+    "ponos": "^4.2.1",
     "runnable-hostname": "git+ssh://git@github.com:CodeNow/runnable-hostname#v1.0.4",
     "slack-client": "~1.4.0",
     "underscore.string": "^3.3.4"
