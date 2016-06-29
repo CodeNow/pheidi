@@ -8,6 +8,7 @@ const assert = chai.assert
 const sinon = require('sinon')
 
 const Slack = require('notifications/slack')
+const tracker = require('models/tracker')
 
 describe('Slack', function () {
   describe('#_canSendMessage', function () {
@@ -23,55 +24,69 @@ describe('Slack', function () {
       })
 
       it('should return false if notifications are enabled', function (done) {
-        var settings = {
+        const settings = {
           notifications: {
             slack: {
               enabled: true
             }
           }
         }
-        var slack = new Slack(settings)
+        const slack = new Slack(settings)
         assert.isFalse(slack._canSendMessage())
         done()
       })
     })
 
     it('should return true if notifications are enabled', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: true
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       assert.isTrue(slack._canSendMessage())
       done()
     })
 
     it('should return true if notifications are disabled', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: false
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       assert.isFalse(slack._canSendMessage())
       done()
     })
   })
   describe('#sendDirectMessage', function () {
+    beforeEach(function (done) {
+      sinon.stub(tracker, 'get').returns(null)
+      sinon.stub(tracker, 'set').returns(null)
+      sinon.stub(tracker, 'del').returns(null)
+      done()
+    })
+
+    afterEach(function (done) {
+      tracker.get.restore()
+      tracker.set.restore()
+      tracker.del.restore()
+      done()
+    })
+
     it('should do nothing if user not found', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: false
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage')
       slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
         assert.isNull(err)
@@ -81,7 +96,7 @@ describe('Slack', function () {
     })
 
     it('should return err if slack client returned error', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: false,
@@ -91,7 +106,7 @@ describe('Slack', function () {
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(new Error('slack'))
       slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
         assert.isDefined(err)
@@ -104,7 +119,7 @@ describe('Slack', function () {
     })
 
     it('should send private message if user found', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: false,
@@ -114,7 +129,7 @@ describe('Slack', function () {
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(null)
       slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
         assert.isNull(err)
@@ -124,11 +139,80 @@ describe('Slack', function () {
         done()
       })
     })
+
+    it('should set cache but not delete on success', function (done) {
+      const settings = {
+        notifications: {
+          slack: {
+            enabled: false,
+            githubUsernameToSlackIdMap: {
+              'podviaznikov': 123123
+            }
+          }
+        }
+      }
+      const slack = new Slack(settings)
+      const message = { text: 'hello' }
+      sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(null)
+      slack.sendDirectMessage('podviaznikov', message, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledOnce(tracker.set)
+        sinon.assert.calledWith(tracker.set, 123123, message)
+        sinon.assert.notCalled(tracker.del)
+        done()
+      })
+    })
+
+    it('should not send private message if cache found', function (done) {
+      const settings = {
+        notifications: {
+          slack: {
+            enabled: false,
+            githubUsernameToSlackIdMap: {
+              'podviaznikov': 123123
+            }
+          }
+        }
+      }
+      const message = { text: 'hello' }
+      const slack = new Slack(settings)
+      tracker.get.returns(message)
+      sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(null)
+      slack.sendDirectMessage('podviaznikov', message, function (err) {
+        assert.isNull(err)
+        sinon.assert.calledOnce(tracker.get)
+        sinon.assert.calledWith(tracker.get, 123123)
+        sinon.assert.notCalled(slack.slackClient.sendPrivateMessage)
+        done()
+      })
+    })
+
+    it('should delete cache if slack client returned error', function (done) {
+      const settings = {
+        notifications: {
+          slack: {
+            enabled: false,
+            githubUsernameToSlackIdMap: {
+              'podviaznikov': 123123
+            }
+          }
+        }
+      }
+      const slack = new Slack(settings)
+      sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(new Error('slack'))
+      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
+        assert.isDefined(err)
+        assert.equal(err.message, 'slack')
+        sinon.assert.calledOnce(tracker.del)
+        sinon.assert.calledWith(tracker.del, 123123)
+        done()
+      })
+    })
   })
 
   describe('#notifyOnAutoDeploy', function () {
     it('should do nothing if slack messaging is disabled', function (done) {
-      var slack = new Slack()
+      const slack = new Slack()
       slack.notifyOnAutoDeploy({}, 'anton', [], function (err, resp) {
         assert.isNull(err)
         assert.isUndefined(resp)
@@ -137,14 +221,14 @@ describe('Slack', function () {
     })
 
     it('should do nothing if slack messaging is disabled in settings', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: false
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       slack.notifyOnAutoDeploy({}, 'anton', [], function (err, resp) {
         assert.isNull(err)
         assert.isUndefined(resp)
@@ -153,14 +237,14 @@ describe('Slack', function () {
     })
 
     it('should do nothing if instance = null', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: true
           }
         }
       }
-      var slack = new Slack(settings)
+      const slack = new Slack(settings)
       slack.notifyOnAutoDeploy({}, 'anton', null, function (err, resp) {
         assert.isNull(err)
         assert.isUndefined(resp)
@@ -169,15 +253,15 @@ describe('Slack', function () {
     })
 
     it('should do nothing if user was not found', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: true
           }
         }
       }
-      var slack = new Slack(settings)
-      var instance = {
+      const slack = new Slack(settings)
+      const instance = {
         name: 'server-1',
         owner: {
           github: 3213,
@@ -192,22 +276,22 @@ describe('Slack', function () {
     })
 
     it('should send direct message', function (done) {
-      var settings = {
+      const settings = {
         notifications: {
           slack: {
             enabled: true
           }
         }
       }
-      var slack = new Slack(settings)
-      var instance = {
+      const slack = new Slack(settings)
+      const instance = {
         name: 'server-1',
         owner: {
           github: 3213,
           username: 'CodeNow'
         }
       }
-      var headCommit = {
+      const headCommit = {
         id: 'a240edf982d467201845b3bf10ccbe16f6049ea9',
         message: 'init & commit & push long test \n next line \n 3d line',
         url: 'https://github.com/CodeNow/api/commit/a240edf982d467201845b3bf10ccbe16f6049ea9',
@@ -215,13 +299,13 @@ describe('Slack', function () {
           username: 'podviaznikov'
         }
       }
-      var commit2 = {
+      const commit2 = {
         id: 'a240edf982d467201845b3bf10ccbe16f6049ea9',
         author: {
           username: 'podviaznikov'
         }
       }
-      var gitInfo = {
+      const gitInfo = {
         branch: 'feature-1',
         headCommit: headCommit,
         commitLog: [ headCommit, commit2 ],
@@ -242,32 +326,32 @@ describe('Slack', function () {
 
   describe('#_createAutoUpdateText', function () {
     it('should return text messages', function (done) {
-      var headCommit = {
+      const headCommit = {
         id: 'a240edf982d467201845b3bf10ccbe16f6049ea9',
         message: 'init & commit & push long test \n next line \n 3d line',
         url: 'https://github.com/CodeNow/api/commit/a240edf982d467201845b3bf10ccbe16f6049ea9'
       }
-      var commit2 = {
+      const commit2 = {
         id: 'a240edf982d467201845b3bf10ccbe16f6049ea9',
         author: {
           username: 'podviaznikov'
         }
       }
-      var gitInfo = {
+      const gitInfo = {
         branch: 'feature-1',
         headCommit: headCommit,
         commitLog: [ headCommit, commit2 ],
         repo: 'CodeNow/api',
         repoName: 'api'
       }
-      var instance = {
+      const instance = {
         name: 'server-1',
         owner: {
           github: 3213,
           username: 'CodeNow'
         }
       }
-      var text = Slack.createAutoDeployText(gitInfo, instance)
+      const text = Slack.createAutoDeployText(gitInfo, instance)
       var expected = 'Your <http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcommit%2Fa240edf982d467201845b3bf10ccbe16f6049ea9'
       expected += '|changes> (init &amp commit &amp push long test   next line   3d... and '
@@ -280,26 +364,26 @@ describe('Slack', function () {
     })
 
     it('should return text if commitLog is []', function (done) {
-      var headCommit = {
+      const headCommit = {
         id: 'a240edf982d467201845b3bf10ccbe16f6049ea9',
         message: 'init & commit & push long test \n next line \n 3d line',
         url: 'https://github.com/CodeNow/api/commit/a240edf982d467201845b3bf10ccbe16f6049ea9'
       }
-      var gitInfo = {
+      const gitInfo = {
         branch: 'feature-1',
         headCommit: headCommit,
         commitLog: [],
         repo: 'CodeNow/api',
         repoName: 'api'
       }
-      var instance = {
+      const instance = {
         name: 'server-1',
         owner: {
           github: 3213,
           username: 'CodeNow'
         }
       }
-      var text = Slack.createAutoDeployText(gitInfo, instance)
+      const text = Slack.createAutoDeployText(gitInfo, instance)
       var expected = 'Your <http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcommit%2Fa240edf982d467201845b3bf10ccbe16f6049ea9'
       expected += '|changes> (init &amp commit &amp push long test   next line   3d...)'
