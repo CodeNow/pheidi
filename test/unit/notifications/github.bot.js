@@ -7,6 +7,7 @@ const clone = require('101/clone')
 const sinon = require('sinon')
 const GitHubBot = require('notifications/github.bot')
 const GitHub = require('models/github')
+const tracker = require('models/tracker')
 
 describe('GitHubBot', function () {
   const ctx = {}
@@ -162,6 +163,9 @@ describe('GitHubBot', function () {
       sinon.stub(GitHub.prototype, 'findCommentByUser').yieldsAsync(null, ctx.comment)
       sinon.stub(GitHub.prototype, 'addComment').yieldsAsync(null)
       sinon.stub(GitHub.prototype, 'updateComment').yieldsAsync(null)
+      sinon.stub(tracker, 'get').returns(null)
+      sinon.stub(tracker, 'set').returns(null)
+      sinon.stub(tracker, 'del').returns(null)
       done()
     })
 
@@ -169,6 +173,9 @@ describe('GitHubBot', function () {
       GitHub.prototype.findCommentByUser.restore()
       GitHub.prototype.addComment.restore()
       GitHub.prototype.updateComment.restore()
+      tracker.get.restore()
+      tracker.set.restore()
+      tracker.del.restore()
       done()
     })
 
@@ -263,8 +270,10 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
+      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
       githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
+        sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2', message)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
           gitInfo.repo,
@@ -275,7 +284,7 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.updateComment,
           gitInfo.repo,
           ctx.comment.id,
-          'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+          message,
           sinon.match.func)
         done()
       })
@@ -298,8 +307,11 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
+      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
       githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
+        sinon.assert.calledOnce(tracker.set)
+        sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2', message)
         sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
           gitInfo.repo,
@@ -310,9 +322,93 @@ describe('GitHubBot', function () {
         sinon.assert.calledWith(GitHub.prototype.addComment,
           gitInfo.repo,
           gitInfo.number,
-          'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+          message,
           sinon.match.func
         )
+        done()
+      })
+    })
+
+    it('should delete cache if updateComment failed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      GitHub.prototype.updateComment.yieldsAsync(new Error('GitHub error'))
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'running'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+        assert.equal(error.message, 'GitHub error')
+        sinon.assert.calledOnce(tracker.del)
+        sinon.assert.calledWith(tracker.del, 'codenow/hellonode/2')
+        done()
+      })
+    })
+
+    it('should delete cache if create comment failed', function (done) {
+      GitHub.prototype.findCommentByUser.yieldsAsync(null, null)
+      GitHub.prototype.addComment.yieldsAsync(new Error('GitHub error'))
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'running'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+        assert.equal(error.message, 'GitHub error')
+        sinon.assert.calledOnce(tracker.del)
+        sinon.assert.calledWith(tracker.del, 'codenow/hellonode/2')
+        done()
+      })
+    })
+
+    it('should not do create comment if cache found', function (done) {
+      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
+      tracker.get.returns(message)
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'running'
+      }
+      const instance = {
+        name: 'inst-1',
+        owner: {
+          username: 'codenow'
+        },
+        shortHash: 'ga71a12',
+        masterPod: true
+      }
+      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+        assert.isNull(error)
+        sinon.assert.calledOnce(tracker.get)
+        sinon.assert.calledWith(tracker.get, 'codenow/hellonode/2')
+        sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
+        sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
+          gitInfo.repo,
+          gitInfo.number,
+          process.env.RUNNABOT_GITHUB_USERNAME,
+          sinon.match.func)
+        sinon.assert.notCalled(GitHub.prototype.updateComment)
         done()
       })
     })
