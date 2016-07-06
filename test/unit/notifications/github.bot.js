@@ -270,7 +270,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
+      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2', message)
@@ -307,7 +307,7 @@ describe('GitHubBot', function () {
         shortHash: 'ga71a12',
         masterPod: true
       }
-      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
+      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       githubBot._upsertComment(gitInfo, instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(tracker.set)
@@ -381,7 +381,7 @@ describe('GitHubBot', function () {
     })
 
     it('should not do create comment if cache found', function (done) {
-      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
+      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       tracker.get.returns(message)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -415,7 +415,7 @@ describe('GitHubBot', function () {
 
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentByUser.yieldsAsync(null, {
-        body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)',
+        body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)',
         id: 2
       })
       const githubBot = new GitHubBot('anton-token')
@@ -697,7 +697,7 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance)
-      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)')
+      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)')
       done()
     })
 
@@ -718,7 +718,7 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance)
-      assert.equal(md, 'The latest push to PR-2 is building. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      assert.equal(md, 'The latest push to PR-2 is building. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
       done()
     })
 
@@ -739,7 +739,7 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance)
-      assert.equal(md, 'The latest push to PR-2 has stopped. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      assert.equal(md, 'The latest push to PR-2 has stopped. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
       done()
     })
 
@@ -760,7 +760,7 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance)
-      assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)')
+      assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
       done()
     })
 
@@ -781,9 +781,9 @@ describe('GitHubBot', function () {
         masterPod: true
       }
       const md = githubBot._render(gitInfo, instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
-      var result = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com?ref=pr)'
+      var result = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       result += '\n\nhere are the other containers in your cluster:\n'
-      result += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
+      result += ' - [inst-2](https://web.runnable.dev/codenow/inst-2)'
       assert.equal(md, result)
       done()
     })
@@ -825,8 +825,8 @@ describe('GitHubBot', function () {
       ]
       const md = githubBot._renderIsolatedInstance(insts)
       let expectedMd = '\n\nhere are the other containers in your cluster:\n'
-      expectedMd += ' - [inst-1](https://web.runnable.dev/codenow/inst-1?ref=pr)\n'
-      expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2?ref=pr)'
+      expectedMd += ' - [inst-1](https://web.runnable.dev/codenow/inst-1)\n'
+      expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2)'
       assert.equal(md, expectedMd)
       done()
     })
