@@ -11,6 +11,15 @@ const tracker = require('models/tracker')
 
 describe('GitHubBot', function () {
   const ctx = {}
+  ctx.instance = {
+    _id: 'inst-1-id',
+    name: 'inst-1',
+    owner: {
+      username: 'codenow'
+    },
+    shortHash: 'ga71a12',
+    masterPod: true
+  }
 
   describe('#_getGitHubToken', function () {
     beforeEach(function (done) {
@@ -157,10 +166,10 @@ describe('GitHubBot', function () {
   describe('#_upsertComment', function () {
     beforeEach(function (done) {
       ctx.comment = {
-        body: 'PR-2 is deployed',
+        body: 'PR-2 is deployed to ' + ctx.instance.name,
         id: 2
       }
-      sinon.stub(GitHub.prototype, 'findCommentByUser').yieldsAsync(null, ctx.comment)
+      sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, [ctx.comment])
       sinon.stub(GitHub.prototype, 'addComment').yieldsAsync(null)
       sinon.stub(GitHub.prototype, 'updateComment').yieldsAsync(null)
       sinon.stub(tracker, 'get').returns(null)
@@ -170,7 +179,7 @@ describe('GitHubBot', function () {
     })
 
     afterEach(function (done) {
-      GitHub.prototype.findCommentByUser.restore()
+      GitHub.prototype.findCommentsByUser.restore()
       GitHub.prototype.addComment.restore()
       GitHub.prototype.updateComment.restore()
       tracker.get.restore()
@@ -179,24 +188,16 @@ describe('GitHubBot', function () {
       done()
     })
 
-    it('should fail if findCommentByUser failed', function (done) {
+    it('should fail if findCommentsByUser failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.findCommentByUser.yieldsAsync(githubError)
+      GitHub.prototype.findCommentsByUser.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
         number: 2
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -213,15 +214,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -229,7 +222,7 @@ describe('GitHubBot', function () {
     })
 
     it('should fail if addComment failed', function (done) {
-      GitHub.prototype.findCommentByUser.yieldsAsync(null, null)
+      GitHub.prototype.findCommentsByUser.yieldsAsync(null, null)
       const githubError = new Error('GitHub error')
       GitHub.prototype.addComment.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
@@ -239,15 +232,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -262,20 +247,12 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
       const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
-        sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2', message)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
+        sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
           gitInfo.repo,
           gitInfo.number,
           process.env.RUNNABOT_GITHUB_USERNAME,
@@ -291,7 +268,7 @@ describe('GitHubBot', function () {
     })
 
     it('should call createComment if comment not found', function (done) {
-      GitHub.prototype.findCommentByUser.yieldsAsync(null, null)
+      GitHub.prototype.findCommentsByUser.yieldsAsync(null, null)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -299,21 +276,13 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
       const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(tracker.set)
-        sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2', message)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
+        sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
           gitInfo.repo,
           gitInfo.number,
           process.env.RUNNABOT_GITHUB_USERNAME,
@@ -338,24 +307,16 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.equal(error.message, 'GitHub error')
         sinon.assert.calledOnce(tracker.del)
-        sinon.assert.calledWith(tracker.del, 'codenow/hellonode/2')
+        sinon.assert.calledWith(tracker.del, 'codenow/hellonode/2/inst-1-id')
         done()
       })
     })
 
     it('should delete cache if create comment failed', function (done) {
-      GitHub.prototype.findCommentByUser.yieldsAsync(null, null)
+      GitHub.prototype.findCommentsByUser.yieldsAsync(null, null)
       GitHub.prototype.addComment.yieldsAsync(new Error('GitHub error'))
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -364,18 +325,10 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.equal(error.message, 'GitHub error')
         sinon.assert.calledOnce(tracker.del)
-        sinon.assert.calledWith(tracker.del, 'codenow/hellonode/2')
+        sinon.assert.calledWith(tracker.del, 'codenow/hellonode/2/inst-1-id')
         done()
       })
     })
@@ -390,20 +343,12 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(tracker.get)
-        sinon.assert.calledWith(tracker.get, 'codenow/hellonode/2')
-        sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
+        sinon.assert.calledWith(tracker.get, 'codenow/hellonode/2/inst-1-id')
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
           gitInfo.repo,
           gitInfo.number,
           process.env.RUNNABOT_GITHUB_USERNAME,
@@ -414,10 +359,10 @@ describe('GitHubBot', function () {
     })
 
     it('should not update comment if comment did not change', function (done) {
-      GitHub.prototype.findCommentByUser.yieldsAsync(null, {
+      GitHub.prototype.findCommentsByUser.yieldsAsync(null, [{
         body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)',
         id: 2
-      })
+      }])
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -425,18 +370,10 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComment(gitInfo, instance, [], function (error) {
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentByUser,
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
           gitInfo.repo,
           gitInfo.number,
           process.env.RUNNABOT_GITHUB_USERNAME,
@@ -476,15 +413,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComments(gitInfo, instance, [], function (err) {
+      githubBot._upsertComments(gitInfo, ctx.instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -501,15 +430,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComments(gitInfo, instance, [], function (err) {
+      githubBot._upsertComments(gitInfo, ctx.instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -524,15 +445,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot._upsertComments(gitInfo, instance, [], function (err) {
+      githubBot._upsertComments(gitInfo, ctx.instance, [], function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
         sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
@@ -545,9 +458,9 @@ describe('GitHubBot', function () {
         const pushInfo2 = clone(gitInfo)
         pushInfo2.number = 2
         sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
-          pushInfo1, instance, [], sinon.match.func)
+          pushInfo1, ctx.instance, [], sinon.match.func)
         sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
-          pushInfo2, instance, [], sinon.match.func)
+          pushInfo2, ctx.instance, [], sinon.match.func)
         done()
       })
     })
@@ -591,7 +504,7 @@ describe('GitHubBot', function () {
           shortHash: 'ga71a12',
           masterPod: true
         }
-        githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
+        githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
@@ -610,15 +523,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
+      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -635,15 +540,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
+      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -658,23 +555,15 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      githubBot.notifyOnUpdate(gitInfo, instance, [], function (err) {
+      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
         sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
-          instance.owner.username,
+          ctx.instance.owner.username,
           sinon.match.func)
         sinon.assert.calledOnce(GitHubBot.prototype._upsertComments)
         sinon.assert.calledWith(GitHubBot.prototype._upsertComments,
-          gitInfo, instance, [], sinon.match.func)
+          gitInfo, ctx.instance, [], sinon.match.func)
         done()
       })
     })
@@ -688,15 +577,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      const md = githubBot._render(gitInfo, instance)
+      const md = githubBot._render(gitInfo, ctx.instance)
       assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)')
       done()
     })
@@ -709,15 +590,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'building'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      const md = githubBot._render(gitInfo, instance)
+      const md = githubBot._render(gitInfo, ctx.instance)
       assert.equal(md, 'The latest push to PR-2 is building. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
       done()
     })
@@ -730,15 +603,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'stopped'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      const md = githubBot._render(gitInfo, instance)
+      const md = githubBot._render(gitInfo, ctx.instance)
       assert.equal(md, 'The latest push to PR-2 has stopped. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
       done()
     })
@@ -751,15 +616,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'failed'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      const md = githubBot._render(gitInfo, instance)
+      const md = githubBot._render(gitInfo, ctx.instance)
       assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
       done()
     })
@@ -772,15 +629,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const instance = {
-        name: 'inst-1',
-        owner: {
-          username: 'codenow'
-        },
-        shortHash: 'ga71a12',
-        masterPod: true
-      }
-      const md = githubBot._render(gitInfo, instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
+      const md = githubBot._render(gitInfo, ctx.instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
       var result = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       result += '\n\nhere are the other containers in your cluster:\n'
       result += ' - [inst-2](https://web.runnable.dev/codenow/inst-2)'
