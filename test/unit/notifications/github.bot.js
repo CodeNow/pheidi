@@ -496,14 +496,6 @@ describe('GitHubBot', function () {
           number: 2,
           state: 'running'
         }
-        const instance = {
-          name: 'inst-1',
-          owner: {
-            username: 'codenow'
-          },
-          shortHash: 'ga71a12',
-          masterPod: true
-        }
         githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
