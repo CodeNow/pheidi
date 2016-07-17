@@ -214,7 +214,7 @@ describe('Slack', function () {
         assert.isDefined(err)
         assert.equal(err.message, 'slack')
         sinon.assert.calledOnce(tracker.del)
-        sinon.assert.calledWith(tracker.del, 123123 + '/' + ctx.instance._id )
+        sinon.assert.calledWith(tracker.del, 123123 + '/' + ctx.instance._id)
         done()
       })
     })
