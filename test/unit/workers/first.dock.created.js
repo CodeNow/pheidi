@@ -37,7 +37,7 @@ describe('First Dock Created', () => {
     })
 
     it('should fail if no org comes back ', (done) => {
-      Worker({ org: '23123213' }).asCallback((err) => {
+      Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, FatalGithubError)
         assert.match(err.message, /Org did not exist/i)
@@ -55,7 +55,7 @@ describe('First Dock Created', () => {
       var error = new Error('HEY')
       SendGrid.prototype.dockCreated.rejects(error)
 
-      Worker({ org: '23123213' }).asCallback((err) => {
+      Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isDefined(err)
         assert.match(err.message, /Failed to send email/)
         assert.instanceOf(err, WorkerStopError)
@@ -68,7 +68,7 @@ describe('First Dock Created', () => {
       }
       Github.prototype.getUserByIdAsync.resolves(org)
 
-      Worker({ org: '23123213' }).asCallback((err) => {
+      Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isNotOk(err)
         sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
         sinon.assert.calledWith(Github.prototype.getUserByIdAsync, 23123213)
