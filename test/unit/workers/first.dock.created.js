@@ -43,18 +43,7 @@ describe('First Dock Created', () => {
         assert.instanceOf(err, FatalGithubError)
         assert.match(err.message, /Org did not exist/i)
         sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
-        sinon.assert.calledWith(Github.prototype.getUserByIdAsync, '23123213')
-        done()
-      })
-    })
-    it('should return WorkerStopError if Github has reached rate limit', function (done) {
-      const githubError = new RateLimitedError('Github has reached rate-limit')
-      Github.prototype.getUserByIdAsync.rejects(githubError)
-
-      Worker({ org: '23123213' }).asCallback((err) => {
-        assert.isDefined(err)
-        assert.match(err.message, /Github has reached rate-limit/)
-        assert.instanceOf(err, WorkerStopError)
+        sinon.assert.calledWith(Github.prototype.getUserByIdAsync, 23123213)
         done()
       })
     })
@@ -82,6 +71,8 @@ describe('First Dock Created', () => {
 
       Worker({ org: '23123213' }).asCallback((err) => {
         assert.isNotOk(err)
+        sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
+        sinon.assert.calledWith(Github.prototype.getUserByIdAsync, 23123213)
         sinon.assert.calledOnce(SendGrid.prototype.dockCreated)
         sinon.assert.calledWith(SendGrid.prototype.dockCreated, org)
         done()
