@@ -2,7 +2,6 @@
 
 const chai = require('chai')
 const FatalGithubError = require('notifications/github.status').FatalGithubError
-const RateLimitedError = require('models/rate-limited-error')
 const Github = require('models/github')
 const SendGrid = require('models/sendgrid')
 const Promise = require('bluebird')
