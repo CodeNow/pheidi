@@ -62,7 +62,7 @@ describe('First Dock Created', () => {
         done()
       })
     })
-    it('should send email on success', function (done) {
+    it('should send email on success with string id', function (done) {
       var org = {
         login: 'sadasd'
       }
@@ -74,6 +74,17 @@ describe('First Dock Created', () => {
         sinon.assert.calledWith(Github.prototype.getUserByIdAsync, 23123213)
         sinon.assert.calledOnce(SendGrid.prototype.dockCreated)
         sinon.assert.calledWith(SendGrid.prototype.dockCreated, org)
+        done()
+      })
+    })
+    it('should send email on success with number id', function (done) {
+      var org = {
+        login: 'sadasd'
+      }
+      Github.prototype.getUserByIdAsync.resolves(org)
+
+      Worker({ githubId: 23123213 }).asCallback((err) => {
+        assert.isNotOk(err)
         done()
       })
     })
