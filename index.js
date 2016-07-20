@@ -1,6 +1,7 @@
 'use strict'
 
 require('loadenv')()
+require('@risingstack/trace')
 
 const CriticalError = require('error-cat/errors/critical-error')
 const ErrorCat = require('error-cat')
