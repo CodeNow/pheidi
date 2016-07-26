@@ -11,6 +11,16 @@ const Slack = require('notifications/slack')
 const tracker = require('models/tracker')
 
 describe('Slack', function () {
+  const ctx = {}
+  ctx.instance = {
+    _id: 'inst_1_id',
+    name: 'server-1',
+    owner: {
+      github: 3213,
+      username: 'CodeNow'
+    }
+  }
+
   describe('#_canSendMessage', function () {
     describe('with setting disabled locally', function () {
       before(function (done) {
@@ -88,7 +98,7 @@ describe('Slack', function () {
       }
       const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage')
-      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
+      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, ctx.instance, function (err) {
         assert.isNull(err)
         sinon.assert.notCalled(slack.slackClient.sendPrivateMessage)
         done()
@@ -108,7 +118,7 @@ describe('Slack', function () {
       }
       const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(new Error('slack'))
-      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
+      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, ctx.instance, function (err) {
         assert.isDefined(err)
         assert.equal(err.message, 'slack')
         sinon.assert.calledOnce(slack.slackClient.sendPrivateMessage)
@@ -131,7 +141,7 @@ describe('Slack', function () {
       }
       const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(null)
-      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
+      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, ctx.instance, function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(slack.slackClient.sendPrivateMessage)
         sinon.assert.calledWith(slack.slackClient.sendPrivateMessage,
@@ -154,10 +164,10 @@ describe('Slack', function () {
       const slack = new Slack(settings)
       const message = { text: 'hello' }
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(null)
-      slack.sendDirectMessage('podviaznikov', message, function (err) {
+      slack.sendDirectMessage('podviaznikov', message, ctx.instance, function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(tracker.set)
-        sinon.assert.calledWith(tracker.set, 123123, message)
+        sinon.assert.calledWith(tracker.set, 123123 + '/' + ctx.instance._id, message)
         sinon.assert.notCalled(tracker.del)
         done()
       })
@@ -178,10 +188,10 @@ describe('Slack', function () {
       const slack = new Slack(settings)
       tracker.get.returns(message)
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(null)
-      slack.sendDirectMessage('podviaznikov', message, function (err) {
+      slack.sendDirectMessage('podviaznikov', message, ctx.instance, function (err) {
         assert.isNull(err)
         sinon.assert.calledOnce(tracker.get)
-        sinon.assert.calledWith(tracker.get, 123123)
+        sinon.assert.calledWith(tracker.get, 123123 + '/' + ctx.instance._id)
         sinon.assert.notCalled(slack.slackClient.sendPrivateMessage)
         done()
       })
@@ -200,11 +210,11 @@ describe('Slack', function () {
       }
       const slack = new Slack(settings)
       sinon.stub(slack.slackClient, 'sendPrivateMessage').yieldsAsync(new Error('slack'))
-      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, function (err) {
+      slack.sendDirectMessage('podviaznikov', { text: 'hello' }, ctx.instance, function (err) {
         assert.isDefined(err)
         assert.equal(err.message, 'slack')
         sinon.assert.calledOnce(tracker.del)
-        sinon.assert.calledWith(tracker.del, 123123)
+        sinon.assert.calledWith(tracker.del, 123123 + '/' + ctx.instance._id)
         done()
       })
     })
@@ -261,14 +271,7 @@ describe('Slack', function () {
         }
       }
       const slack = new Slack(settings)
-      const instance = {
-        name: 'server-1',
-        owner: {
-          github: 3213,
-          username: 'CodeNow'
-        }
-      }
-      slack.notifyOnAutoDeploy({}, null, instance, function (err, resp) {
+      slack.notifyOnAutoDeploy({}, null, ctx.instance, function (err, resp) {
         assert.isNull(err)
         assert.isUndefined(resp)
         done()
@@ -284,13 +287,6 @@ describe('Slack', function () {
         }
       }
       const slack = new Slack(settings)
-      const instance = {
-        name: 'server-1',
-        owner: {
-          github: 3213,
-          username: 'CodeNow'
-        }
-      }
       const headCommit = {
         id: 'a240edf982d467201845b3bf10ccbe16f6049ea9',
         message: 'init & commit & push long test \n next line \n 3d line',
@@ -313,7 +309,7 @@ describe('Slack', function () {
         repoName: 'api'
       }
       sinon.stub(slack, 'sendDirectMessage').yieldsAsync(null)
-      slack.notifyOnAutoDeploy(gitInfo, 'podviaznikov', instance, function (err, resp) {
+      slack.notifyOnAutoDeploy(gitInfo, 'podviaznikov', ctx.instance, function (err, resp) {
         assert.isNull(err)
         assert.isUndefined(resp)
         sinon.assert.calledOnce(slack.sendDirectMessage)
@@ -344,14 +340,7 @@ describe('Slack', function () {
         repo: 'CodeNow/api',
         repoName: 'api'
       }
-      const instance = {
-        name: 'server-1',
-        owner: {
-          github: 3213,
-          username: 'CodeNow'
-        }
-      }
-      const text = Slack.createAutoDeployText(gitInfo, instance)
+      const text = Slack.createAutoDeployText(gitInfo, ctx.instance)
       var expected = 'Your <http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcommit%2Fa240edf982d467201845b3bf10ccbe16f6049ea9'
       expected += '|changes> (init &amp commit &amp push long test   next line   3d... and '
@@ -376,14 +365,7 @@ describe('Slack', function () {
         repo: 'CodeNow/api',
         repoName: 'api'
       }
-      const instance = {
-        name: 'server-1',
-        owner: {
-          github: 3213,
-          username: 'CodeNow'
-        }
-      }
-      const text = Slack.createAutoDeployText(gitInfo, instance)
+      const text = Slack.createAutoDeployText(gitInfo, ctx.instance)
       var expected = 'Your <http://localhost:3031/actions/redirect?'
       expected += 'url=https%3A%2F%2Fgithub.com%2FCodeNow%2Fapi%2Fcommit%2Fa240edf982d467201845b3bf10ccbe16f6049ea9'
       expected += '|changes> (init &amp commit &amp push long test   next line   3d...)'
