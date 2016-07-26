@@ -1,6 +1,6 @@
 {
   "name": "pheidi",
-  "version": "1.18.6",
+  "version": "1.19.2",
   "description": "Runnable notifications worker server",
   "main": "index.js",
   "scripts": {
@@ -52,10 +52,11 @@
     "keypather": "^2.0.0",
     "loadenv": "^2.1.0",
     "lru-cache": "^4.0.1",
-    "mongodb": "^2.1.16",
+    "mongodb": "2.1.17",
     "monitor-dog": "^1.5.0",
     "ponos": "^4.2.1",
     "runnable-hostname": "git+ssh://git@github.com:CodeNow/runnable-hostname#v1.0.4",
+    "sendgrid": "^1.9.2",
     "slack-client": "~1.4.0",
     "underscore.string": "^3.3.4"
   },
