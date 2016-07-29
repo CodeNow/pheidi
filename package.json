@@ -48,6 +48,7 @@
     "defaults": "^1.0.3",
     "error-cat": "^3.0.0",
     "github4": "1.1.0",
+    "intercom.io": "^1.2.1",
     "joi": "^8.0.5",
     "keypather": "^2.0.0",
     "loadenv": "^2.1.0",
