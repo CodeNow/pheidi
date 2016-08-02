@@ -140,8 +140,6 @@ describe('sendgrid', function () {
           .then(function () {
             sinon.assert.calledOnce(sendgrid.sendEmail)
             var sendEmailOptions = sendgrid.sendEmail.args[0][0]
-
-            assert.equal(sendEmailOptions.email, 'signup@runnable.com')
             assert.equal(sendEmailOptions.from, 'support@runnable.com')
             assert.equal(sendEmailOptions.fromname, 'Runnable Support')
             assert.equal(sendEmailOptions.subject, 'Your infrastructure is ready')
