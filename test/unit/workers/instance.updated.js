@@ -10,7 +10,6 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
-const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const rabbitmq = require('rabbitmq')
 const Worker = require('workers/instance.updated').task
 

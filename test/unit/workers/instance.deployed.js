@@ -269,7 +269,6 @@ describe('Instance Deployed Worker', function () {
         })
       })
 
-
       it('should not call slack notification if pushUser was not found', function (done) {
         Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).returns(null)
         Worker(testData).asCallback(function (err) {
