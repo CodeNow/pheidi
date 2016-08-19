@@ -11,7 +11,8 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const rabbitmq = require('rabbitmq')
-const Worker = require('workers/instance.updated').task
+const JobModule = require('workers/instance.updated')
+const Worker = JobModule.task
 
 describe('Instance Updated Worker', function () {
   describe('#instanceState', function () {
@@ -21,7 +22,7 @@ describe('Instance Updated Worker', function () {
           failed: true
         }
       }
-      const state = Worker._instanceState(cv, {})
+      const state = JobModule._instanceState(cv, {})
       assert.equal(state, 'failed')
       done()
     })
@@ -33,7 +34,7 @@ describe('Instance Updated Worker', function () {
           completed: new Date().getTime()
         }
       }
-      const state = Worker._instanceState(cv, {})
+      const state = JobModule._instanceState(cv, {})
       assert.equal(state, 'running')
       done()
     })
@@ -52,7 +53,7 @@ describe('Instance Updated Worker', function () {
           }
         }
       }
-      const state = Worker._instanceState(cv, container)
+      const state = JobModule._instanceState(cv, container)
       assert.equal(state, 'stopped')
       done()
     })
@@ -63,7 +64,7 @@ describe('Instance Updated Worker', function () {
         build: {}
       }
       const container = {}
-      const state = Worker._instanceState(cv, container)
+      const state = JobModule._instanceState(cv, container)
       assert.equal(state, 'building')
       done()
     })
@@ -74,7 +75,7 @@ describe('Instance Updated Worker', function () {
         build: {}
       }
       const container = {}
-      const state = Worker._instanceState(cv, container)
+      const state = JobModule._instanceState(cv, container)
       assert.isNull(state)
       done()
     })
