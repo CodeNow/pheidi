@@ -13,7 +13,7 @@ require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
 
-const Worker = require('workers/container.life-cycle.died')
+const Worker = require('workers/container.life-cycle.died').task
 
 describe('Container life-cycle died', () => {
   describe('Worker', () => {
