@@ -13,7 +13,8 @@ require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
 
-const Worker = require('workers/container.life-cycle.died').task
+const JobModule = require('workers/container.life-cycle.died')
+const Worker = JobModule.task
 
 describe('Container life-cycle died', () => {
   describe('Worker', () => {
@@ -67,14 +68,14 @@ describe('Container life-cycle died', () => {
         }
       }
       sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
-      sinon.stub(Worker, 'calculateStatus').returns(mockStatus)
+      sinon.stub(JobModule, 'calculateStatus').returns(mockStatus)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
       done()
     })
 
     afterEach((done) => {
       mongodbHelper.helper.restore()
-      Worker.calculateStatus.restore()
+      JobModule.calculateStatus.restore()
       GitHubStatus.prototype.setStatus.restore()
       done()
     })
@@ -129,8 +130,8 @@ describe('Container life-cycle died', () => {
     it('should calculate the status', (done) => {
       Worker(mockParams).asCallback((err) => {
         assert.isNull(err)
-        sinon.assert.calledOnce(Worker.calculateStatus)
-        sinon.assert.calledWith(Worker.calculateStatus, mockParams)
+        sinon.assert.calledOnce(JobModule.calculateStatus)
+        sinon.assert.calledWith(JobModule.calculateStatus, mockParams)
         done()
       })
     })
@@ -182,7 +183,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), 'failure')
+      assert.equal(JobModule.calculateStatus(mockJob), 'failure')
       done()
     })
 
@@ -199,7 +200,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), null)
+      assert.equal(JobModule.calculateStatus(mockJob), null)
       done()
     })
 
@@ -216,7 +217,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), 'success')
+      assert.equal(JobModule.calculateStatus(mockJob), 'success')
       done()
     })
 
@@ -233,7 +234,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), 'error')
+      assert.equal(JobModule.calculateStatus(mockJob), 'error')
       done()
     })
   })
