@@ -55,7 +55,7 @@
     "lru-cache": "^4.0.1",
     "mongodb": "2.1.17",
     "monitor-dog": "^1.5.0",
-    "ponos": "^5.1.0",
+    "ponos": "^5.1.1",
     "runnable-hostname": "git+ssh://git@github.com:CodeNow/runnable-hostname#v1.0.4",
     "sendgrid": "^1.9.2",
     "slack-client": "~1.4.0",
