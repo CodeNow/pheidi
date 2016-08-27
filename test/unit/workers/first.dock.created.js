@@ -11,7 +11,7 @@ const WorkerStopError = require('error-cat/errors/worker-stop-error')
 require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
-const Worker = require('workers/first.dock.created')
+const Worker = require('workers/first.dock.created').task
 
 describe('First Dock Created', () => {
   describe('Worker', () => {
@@ -25,15 +25,6 @@ describe('First Dock Created', () => {
       SendGrid.prototype.dockCreated.restore()
       Github.prototype.getUserByIdAsync.restore()
       done()
-    })
-
-    it('should fail if no github id is given', (done) => {
-      Worker({}).asCallback((err) => {
-        assert.isDefined(err)
-        assert.instanceOf(err, WorkerStopError)
-        assert.match(err.message, /Invalid job/i)
-        done()
-      })
     })
 
     it('should fail if no org comes back ', (done) => {
