@@ -16,7 +16,7 @@ const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const GitHubBot = require('notifications/github.bot')
 const Worker = require('workers/instance.deleted').task
 
-describe('Instance Updated Worker', function () {
+describe('Instance Deleted Worker', function () {
   describe('worker', function () {
     describe('regular flow', function () {
       beforeEach(function (done) {
@@ -29,6 +29,31 @@ describe('Instance Updated Worker', function () {
         GitHubBot.prototype.deleteBranchNotificationsAsync.restore()
         GitHubBot.prototype.deleteAllNotificationsAsync.restore()
         done()
+      })
+
+      it('should do nothing if testing instance', function (done) {
+        const instance = {
+          isTesting: true,
+          owner: {
+            github: 2828361
+          },
+          contextVersions: [
+            {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
+          ]
+        }
+        Worker({ instance: instance }).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
+          done()
+        })
       })
 
       it('should do nothing if org was not whitelisted', function (done) {

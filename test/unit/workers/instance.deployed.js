@@ -161,6 +161,22 @@ describe('Instance Deployed Worker', function () {
           })
         })
 
+        it('should reject when instance isTesting with WorkerStopError', function (done) {
+          Mongo.prototype.findOneInstanceAsync.resolves({
+            isTesting: true,
+            owner: {
+              username: 'runnable'
+            }
+          })
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.instanceOf(err, WorkerStopError)
+            assert.match(err.message, /no notifications for testing instance/i)
+            done()
+          })
+        })
+
         it('should reject when instance had no ownerUsername found with WorkerStopError', function (done) {
           Mongo.prototype.findOneInstanceAsync.resolves({})
 
