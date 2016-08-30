@@ -121,6 +121,33 @@ describe('Instance Updated Worker', function () {
         })
       })
 
+      it('should do nothing if testing instance', function (done) {
+        const instance = {
+          owner: {
+            github: 2828361
+          },
+          isTesting: true,
+          contextVersions: [
+            {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ],
+              build: {
+                failed: true
+              }
+            }
+          ]
+        }
+        Worker({ instance: instance }).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
+          done()
+        })
+      })
+
       it('should do nothing if org was not whitelisted', function (done) {
         const instance = {
           owner: {
