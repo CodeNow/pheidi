@@ -26,7 +26,7 @@ describe('sendgrid', function () {
   var rejectionPromise
   var successPromise
 
-  describe.only('#constructor', () => {
+  describe('#constructor', () => {
     var SENDGRID_KEY
     before('Remove ENV for test', () => {
       SENDGRID_KEY = process.env.SENDGRID_KEY
@@ -39,14 +39,14 @@ describe('sendgrid', function () {
       Promise.try(() => {
         sendgrid = new SendGridModel()
       })
-        .asCallback(err => {
+        .asCallback((err) => {
           assert.isOk(err)
           done()
         })
     })
   })
 
-  describe.only('Methods', () => {
+  describe('Methods', () => {
     beforeEach(function (done) {
       error = new Error('this is an error')
       rejectionPromise = Promise.reject(error)
