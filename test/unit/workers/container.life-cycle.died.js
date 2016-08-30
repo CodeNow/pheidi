@@ -3,7 +3,7 @@
 const chai = require('chai')
 const FatalGithubError = require('notifications/github.status').FatalGithubError
 const GitHubStatus = require('notifications/github.status')
-const mongodbHelper = require('mongo-helper')
+const Mongo = require('models/mongo')
 const PreconditionError = require('notifications/github.status').PreconditionError
 const Promise = require('bluebird')
 const sinon = require('sinon')
@@ -53,35 +53,27 @@ describe('Container life-cycle died', () => {
         dockerContainer: mockParams.inspectData.Id
       }
     }
-    let mongoHelperStubs
-    let collectionFindStub
 
     beforeEach((done) => {
-      collectionFindStub = sinon.stub().yields(null, [mockInstance])
-      mongoHelperStubs = {
-        db: {
-          collection: sinon.stub().returns({
-            find: sinon.stub().returns({
-              toArray: collectionFindStub
-            })
-          })
-        }
-      }
-      sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
+      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'findInstancesAsync').resolves([mockInstance])
       sinon.stub(JobModule, 'calculateStatus').returns(mockStatus)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
       done()
     })
 
     afterEach((done) => {
-      mongodbHelper.helper.restore()
+      Mongo.prototype.connect.restore()
+      Mongo.prototype.close.restore()
+      Mongo.prototype.findInstancesAsync.restore()
       JobModule.calculateStatus.restore()
       GitHubStatus.prototype.setStatus.restore()
       done()
     })
 
     it('should fail if no instance is found', (done) => {
-      collectionFindStub.yields()
+      Mongo.prototype.findInstancesAsync.resolves([])
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, WorkerStopError)
@@ -91,7 +83,7 @@ describe('Container life-cycle died', () => {
     })
 
     it('should fail if the instance does not have the user container attached', (done) => {
-      collectionFindStub.yields(null, [{
+      Mongo.prototype.findInstancesAsync.resolves([{
         _id: '1234',
         isTesting: true,
         container: {
@@ -107,7 +99,7 @@ describe('Container life-cycle died', () => {
     })
 
     it('should fail if the instance has no main acv', (done) => {
-      collectionFindStub.yields(null, [{
+      Mongo.prototype.findInstancesAsync.resolves([{
         _id: '1234',
         isTesting: true,
         contextVersion: {
