@@ -72,7 +72,7 @@ describe('MongoDB Helper', function () {
     })
   })
 
-  describe.only('#getUserEmailByGithubId', () => {
+  describe('#getUserEmailByGithubId', () => {
     const githubId = 1981198
     const userEmail = 'jorge@runnable.com'
     const user = {
