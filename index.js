@@ -11,7 +11,7 @@ const rabbitmq = require('rabbitmq')
 const mongodbClient = require('mongo-helper').client
 
 Promise.join(
-  mongodbClient.connect(),
+  mongodbClient.connectAsync(),
   rabbitmq.publisher.connect()
 )
   .spread((mongoClient) => {
@@ -23,7 +23,7 @@ Promise.join(
   })
   .catch((err) => {
     log.fatal({ err: err }, 'Pheidi server failed to start')
-    mongodbClient.disconnect()
+    mongodbClient.closeAsync()
     ErrorCat.report(new CriticalError(
       'server failed to start',
       { err: err }
