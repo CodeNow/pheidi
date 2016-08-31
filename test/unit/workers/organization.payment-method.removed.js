@@ -28,20 +28,20 @@ describe('organization.payment-method.removed', () => {
           githubId: userGithubId
         }
       }
-      sinon.stub(mongoHelper, 'getUserEmailByGithubId').resolves(paymentMethodOwnerEmail)
+      sinon.stub(mongoHelper.prototype, 'getUserEmailByGithubId').resolves(paymentMethodOwnerEmail)
       sinon.stub(SendGrid.prototype, 'paymentMethodRemoved').resolves(true)
     })
 
     afterEach(() => {
       SendGrid.prototype.paymentMethodRemoved.restore()
-      mongoHelper.getUserEmailByGithubId.restore()
+      mongoHelper.prototype.getUserEmailByGithubId.restore()
     })
 
     it('should get the email for the user', (done) => {
       NotifyPaymentMethodRemoved(validJob)
         .then(() => {
-          sinon.assert.calledOnce(mongoHelper.getUserEmailByGithubId)
-          sinon.assert.calledWithExactly(mongoHelper.getUserEmailByGithubId,
+          sinon.assert.calledOnce(mongoHelper.prototype.getUserEmailByGithubId)
+          sinon.assert.calledWithExactly(mongoHelper.prototype.getUserEmailByGithubId,
             userGithubId
           )
         })
@@ -62,7 +62,7 @@ describe('organization.payment-method.removed', () => {
     })
 
     it('should throw any `WorkerStopError` if no email is returned', (done) => {
-      mongoHelper.getUserEmailByGithubId.resolves(null)
+      mongoHelper.prototype.getUserEmailByGithubId.resolves(null)
 
       NotifyPaymentMethodRemoved(validJob)
         .asCallback((err) => {
@@ -75,7 +75,7 @@ describe('organization.payment-method.removed', () => {
 
     it('should throw any error thrown by `getUserEmailByGithubId`', (done) => {
       const thrownErr = new Error()
-      mongoHelper.getUserEmailByGithubId.rejects(thrownErr)
+      mongoHelper.prototype.getUserEmailByGithubId.rejects(thrownErr)
 
       NotifyPaymentMethodRemoved(validJob)
         .asCallback((err) => {

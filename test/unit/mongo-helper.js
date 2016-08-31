@@ -15,6 +15,7 @@ var MongoDB = require('models/mongo')
 
 // internal (being tested)
 var mongodbHelper = require('mongo-helper')
+var mongoClient = require('mongo-helper').client
 
 describe('MongoDB Helper', function () {
   describe('#helper', () => {
@@ -72,7 +73,7 @@ describe('MongoDB Helper', function () {
     })
   })
 
-  describe('#getUserEmailByGithubId', () => {
+  describe.only('#getUserEmailByGithubId', () => {
     const githubId = 1981198
     const userEmail = 'jorge@runnable.com'
     const user = {
@@ -87,16 +88,8 @@ describe('MongoDB Helper', function () {
       MongoDB.prototype.findOneUserAsync.restore()
     })
 
-    it('should connect to the helper', (done) => {
-      mongodbHelper.getUserEmailByGithubId(githubId)
-        .then(() => {
-          sinon.assert.calledOnce(mongodbHelper.helper)
-        })
-        .asCallback(done)
-    })
-
     it('should fint the user by its githubid', (done) => {
-      mongodbHelper.getUserEmailByGithubId(githubId)
+      mongoClient.getUserEmailByGithubId(githubId)
         .then(() => {
           sinon.assert.calledOnce(MongoDB.prototype.findOneUserAsync)
           sinon.assert.calledWithExactly(MongoDB.prototype.findOneUserAsync, { 'accounts.github.id': githubId })
@@ -105,7 +98,7 @@ describe('MongoDB Helper', function () {
     })
 
     it('should return the user', (done) => {
-      mongodbHelper.getUserEmailByGithubId(githubId)
+      mongoClient.getUserEmailByGithubId(githubId)
         .then((returnedUserEmail) => {
           assert.equal(returnedUserEmail, userEmail)
         })
@@ -115,7 +108,7 @@ describe('MongoDB Helper', function () {
     it('should return `null` if there is no user', (done) => {
       MongoDB.prototype.findOneUserAsync.resolves(undefined)
 
-      mongodbHelper.getUserEmailByGithubId(githubId)
+      mongoClient.getUserEmailByGithubId(githubId)
         .then((returnedUserEmail) => {
           assert.equal(returnedUserEmail, null)
         })
@@ -125,7 +118,7 @@ describe('MongoDB Helper', function () {
     it('should return `null` if there is no user email', (done) => {
       MongoDB.prototype.findOneUserAsync.resolves({ email: undefined })
 
-      mongodbHelper.getUserEmailByGithubId(githubId)
+      mongoClient.getUserEmailByGithubId(githubId)
         .then((returnedUserEmail) => {
           assert.equal(returnedUserEmail, null)
         })
