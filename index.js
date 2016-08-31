@@ -7,10 +7,10 @@ const ErrorCat = require('error-cat')
 const log = require('logger').child({ module: 'main' })
 const workerServer = require('worker-server')
 const rabbitmq = require('rabbitmq')
-const mongodbClient = require('mongo-helper')
+const mongodbClient = require('mongo-helper').client
 
 Promise.join(
-  mongodbClient.connectAsync(),
+  mongodbClient.connect(),
   rabbitmq.publisher.connect()
 )
   .spread((mongoClient) => {
@@ -22,7 +22,7 @@ Promise.join(
   })
   .catch((err) => {
     log.fatal({ err: err }, 'Pheidi server failed to start')
-    mongodbClient.closeAsync()
+    mongodbClient.disconnect()
     ErrorCat.report(new CriticalError(
       'server failed to start',
       { err: err }

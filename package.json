@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/CodeNow/pheidi#readme",
   "options": {
-    "mocha": "--timeout 5000 --bail --recursive --reporter spec"
+    "mocha": "--timeout 5000 --recursive --reporter spec"
   },
   "standard": {
     "globals": [

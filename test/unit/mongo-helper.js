@@ -15,7 +15,6 @@ var MongoDB = require('models/mongo')
 
 // internal (being tested)
 var mongodbHelper = require('mongo-helper')
-var mongoClient = require('mongo-helper').client
 
 describe('MongoDB Helper', function () {
   describe('#helper', () => {
@@ -70,59 +69,6 @@ describe('MongoDB Helper', function () {
           sinon.assert.calledOnce(MongoDB.prototype.close)
           assert.equal(result, 1)
         })
-    })
-  })
-
-  describe.only('#getUserEmailByGithubId', () => {
-    const githubId = 1981198
-    const userEmail = 'jorge@runnable.com'
-    const user = {
-      email: userEmail
-    }
-    beforeEach(function () {
-      sinon.stub(mongodbHelper, 'helper').resolves(new MongoDB())
-      sinon.stub(MongoDB.prototype, 'findOneUserAsync').resolves(user)
-    })
-    afterEach(function () {
-      mongodbHelper.helper.restore()
-      MongoDB.prototype.findOneUserAsync.restore()
-    })
-
-    it('should fint the user by its githubid', (done) => {
-      mongoClient.getUserEmailByGithubId(githubId)
-        .then(() => {
-          sinon.assert.calledOnce(MongoDB.prototype.findOneUserAsync)
-          sinon.assert.calledWithExactly(MongoDB.prototype.findOneUserAsync, { 'accounts.github.id': githubId })
-        })
-        .asCallback(done)
-    })
-
-    it('should return the user', (done) => {
-      mongoClient.getUserEmailByGithubId(githubId)
-        .then((returnedUserEmail) => {
-          assert.equal(returnedUserEmail, userEmail)
-        })
-        .asCallback(done)
-    })
-
-    it('should return `null` if there is no user', (done) => {
-      MongoDB.prototype.findOneUserAsync.resolves(undefined)
-
-      mongoClient.getUserEmailByGithubId(githubId)
-        .then((returnedUserEmail) => {
-          assert.equal(returnedUserEmail, null)
-        })
-        .asCallback(done)
-    })
-
-    it('should return `null` if there is no user email', (done) => {
-      MongoDB.prototype.findOneUserAsync.resolves({ email: undefined })
-
-      mongoClient.getUserEmailByGithubId(githubId)
-        .then((returnedUserEmail) => {
-          assert.equal(returnedUserEmail, null)
-        })
-        .asCallback(done)
     })
   })
 })

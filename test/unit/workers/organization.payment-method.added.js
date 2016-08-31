@@ -10,7 +10,7 @@ require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
 const NotifyPaymentMethodAdded = require('workers/organization.payment-method.added').task
-const mongoHelper = require('mongo-helper')
+const Mongodb = require('models/mongo')
 
 describe('organization.payment-method.added', () => {
   describe('Worker', () => {
@@ -28,20 +28,20 @@ describe('organization.payment-method.added', () => {
           githubId: userGithubId
         }
       }
-      sinon.stub(mongoHelper.prototype, 'getUserEmailByGithubId').resolves(paymentMethodOwnerEmail)
+      sinon.stub(Mongodb.prototype, 'getUserEmailByGithubId').resolves(paymentMethodOwnerEmail)
       sinon.stub(SendGrid.prototype, 'paymentMethodAdded').resolves(true)
     })
 
     afterEach(() => {
       SendGrid.prototype.paymentMethodAdded.restore()
-      mongoHelper.prototype.getUserEmailByGithubId.restore()
+      Mongodb.prototype.getUserEmailByGithubId.restore()
     })
 
     it('should get the email for the user', (done) => {
       NotifyPaymentMethodAdded(validJob)
         .then(() => {
-          sinon.assert.calledOnce(mongoHelper.prototype.getUserEmailByGithubId)
-          sinon.assert.calledWithExactly(mongoHelper.prototype.getUserEmailByGithubId,
+          sinon.assert.calledOnce(Mongodb.prototype.getUserEmailByGithubId)
+          sinon.assert.calledWithExactly(Mongodb.prototype.getUserEmailByGithubId,
             userGithubId
           )
         })
@@ -62,7 +62,7 @@ describe('organization.payment-method.added', () => {
     })
 
     it('should throw any `WorkerStopError` if no email is returned', (done) => {
-      mongoHelper.prototype.getUserEmailByGithubId.resolves(null)
+      Mongodb.prototype.getUserEmailByGithubId.resolves(null)
 
       NotifyPaymentMethodAdded(validJob)
         .asCallback((err) => {
@@ -75,7 +75,7 @@ describe('organization.payment-method.added', () => {
 
     it('should throw any error thrown by `getUserEmailByGithubId`', (done) => {
       const thrownErr = new Error()
-      mongoHelper.prototype.getUserEmailByGithubId.rejects(thrownErr)
+      Mongodb.prototype.getUserEmailByGithubId.rejects(thrownErr)
 
       NotifyPaymentMethodAdded(validJob)
         .asCallback((err) => {
