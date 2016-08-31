@@ -1,6 +1,7 @@
 'use strict'
 
 require('loadenv')()
+const Promise = require('bluebird')
 
 const CriticalError = require('error-cat/errors/critical-error')
 const ErrorCat = require('error-cat')
