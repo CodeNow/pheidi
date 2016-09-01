@@ -249,8 +249,8 @@ describe('GitHubBot', function () {
       }
       let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
-      message += ' to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment]'
-      message += '(https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>'
+      message += ' to [your environment](https://web.runnable.dev/codenow/inst-1)'
+      message += '\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
@@ -281,8 +281,8 @@ describe('GitHubBot', function () {
       }
       let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
-      message += 'to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment]'
-      message += '(https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>'
+      message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
+      message += '\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(tracker.set)
@@ -340,7 +340,7 @@ describe('GitHubBot', function () {
     })
 
     it('should not do create comment if cache found', function (done) {
-      const message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>'
+      const message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       tracker.get.returns(message)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -366,7 +366,7 @@ describe('GitHubBot', function () {
 
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentsByUser.yieldsAsync(null, [{
-        body: 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>',
+        body: 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>',
         id: 2
       }])
       const githubBot = new GitHubBot('anton-token')
@@ -576,7 +576,7 @@ describe('GitHubBot', function () {
         state: 'running'
       }
       const md = githubBot._render(gitInfo, ctx.instance)
-      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>')
+      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>')
       done()
     })
 
@@ -591,8 +591,8 @@ describe('GitHubBot', function () {
       const md = githubBot._render(gitInfo, ctx.instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
       let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
-      message += 'to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment]'
-      message += '(https://web.runnable.dev/codenow/inst-1)\n<sub>Related containers: '
+      message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
+      message += '\n<sub>Related containers: '
       message += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9"> [inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
       assert.equal(md, message)
       done()
