@@ -116,4 +116,57 @@ describe('Mongo Model', function () {
       )
     })
   })
+
+  describe('#getUserEmailByGithubId', () => {
+    const githubId = 1981198
+    const userEmail = 'jorge@runnable.com'
+    const user = {
+      email: userEmail
+    }
+    let client
+    beforeEach(function () {
+      client = new MongoDB()
+      sinon.stub(MongoDB.prototype, 'findOneUserAsync').resolves(user)
+    })
+    afterEach(function () {
+      MongoDB.prototype.findOneUserAsync.restore()
+    })
+
+    it('should fint the user by its githubid', (done) => {
+      client.getUserEmailByGithubId(githubId)
+        .then(() => {
+          sinon.assert.calledOnce(MongoDB.prototype.findOneUserAsync)
+          sinon.assert.calledWithExactly(MongoDB.prototype.findOneUserAsync, { 'accounts.github.id': githubId })
+        })
+        .asCallback(done)
+    })
+
+    it('should return the user', (done) => {
+      client.getUserEmailByGithubId(githubId)
+        .then((returnedUserEmail) => {
+          assert.equal(returnedUserEmail, userEmail)
+        })
+        .asCallback(done)
+    })
+
+    it('should return `null` if there is no user', (done) => {
+      MongoDB.prototype.findOneUserAsync.resolves(undefined)
+
+      client.getUserEmailByGithubId(githubId)
+        .then((returnedUserEmail) => {
+          assert.equal(returnedUserEmail, null)
+        })
+        .asCallback(done)
+    })
+
+    it('should return `null` if there is no user email', (done) => {
+      MongoDB.prototype.findOneUserAsync.resolves({ email: undefined })
+
+      client.getUserEmailByGithubId(githubId)
+        .then((returnedUserEmail) => {
+          assert.equal(returnedUserEmail, null)
+        })
+        .asCallback(done)
+    })
+  })
 })

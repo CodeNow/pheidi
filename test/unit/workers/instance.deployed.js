@@ -14,7 +14,7 @@ const ObjectID = require('mongodb').ObjectID
 const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const Mongo = require('models/mongo')
 const Slack = require('notifications/slack')
-const Worker = require('workers/instance.deployed')
+const Worker = require('workers/instance.deployed').task
 
 describe('Instance Deployed Worker', function () {
   describe('worker', function () {
@@ -116,68 +116,6 @@ describe('Instance Deployed Worker', function () {
     })
 
     describe('errors', function () {
-      describe('invalid Job', function () {
-        it('should throw a task fatal error if the job is missing entirely', function (done) {
-          Worker().asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, WorkerStopError)
-            assert.isDefined(err.data.err)
-            assert.match(err.data.err.message, /job.+required/i)
-            done()
-          })
-        })
-
-        it('should throw a task fatal error if the job is missing a instanceId', function (done) {
-          Worker({}).asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, WorkerStopError)
-            assert.isDefined(err.data.err)
-            assert.match(err.data.err.message, /instanceId.*required/i)
-            done()
-          })
-        })
-
-        it('should throw a task fatal error if the job is not an object', function (done) {
-          Worker(true).asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, WorkerStopError)
-            assert.isDefined(err.data.err)
-            assert.match(err.data.err.message, /must be an object/i)
-            done()
-          })
-        })
-
-        it('should throw a task fatal error if the instanceId is not a string', function (done) {
-          Worker({ instanceId: {} }).asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, WorkerStopError)
-            assert.isDefined(err.data.err)
-            assert.match(err.data.err.message, /instanceId.*string/i)
-            done()
-          })
-        })
-
-        it('should throw a task fatal error if job is missing cvId', function (done) {
-          Worker({ instanceId: testInstanceId }).asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, WorkerStopError)
-            assert.isDefined(err.data.err)
-            assert.match(err.data.err.message, /cvId.*required/i)
-            done()
-          })
-        })
-
-        it('should throw a task fatal error if job is missing cvId', function (done) {
-          Worker({ instanceId: testInstanceId, cvId: {} }).asCallback(function (err) {
-            assert.isDefined(err)
-            assert.instanceOf(err, WorkerStopError)
-            assert.isDefined(err.data.err)
-            assert.match(err.data.err.message, /cvId.*string/i)
-            done()
-          })
-        })
-      })
-
       describe('behavioral errors', function () {
         it('should reject with any instance search error', function (done) {
           const mongoError = new Error('Mongo failed')
@@ -219,6 +157,22 @@ describe('Instance Deployed Worker', function () {
             assert.isDefined(err)
             assert.instanceOf(err, WorkerStopError)
             assert.match(err.message, /contextversion not found/i)
+            done()
+          })
+        })
+
+        it('should reject when instance isTesting with WorkerStopError', function (done) {
+          Mongo.prototype.findOneInstanceAsync.resolves({
+            isTesting: true,
+            owner: {
+              username: 'runnable'
+            }
+          })
+
+          Worker(testData).asCallback(function (err) {
+            assert.isDefined(err)
+            assert.instanceOf(err, WorkerStopError)
+            assert.match(err.message, /no notifications for testing instance/i)
             done()
           })
         })
@@ -330,7 +284,6 @@ describe('Instance Deployed Worker', function () {
           done()
         })
       })
-
 
       it('should not call slack notification if pushUser was not found', function (done) {
         Mongo.prototype.findOneUserAsync.withArgs({ 'accounts.github.id': pushUserId }).returns(null)

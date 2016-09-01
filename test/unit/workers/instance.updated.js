@@ -10,9 +10,9 @@ const assert = chai.assert
 const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
-const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const rabbitmq = require('rabbitmq')
-const Worker = require('workers/instance.updated')
+const JobModule = require('workers/instance.updated')
+const Worker = JobModule.task
 
 describe('Instance Updated Worker', function () {
   describe('#instanceState', function () {
@@ -22,7 +22,7 @@ describe('Instance Updated Worker', function () {
           failed: true
         }
       }
-      const state = Worker._instanceState(cv, {})
+      const state = JobModule._instanceState(cv, {})
       assert.equal(state, 'failed')
       done()
     })
@@ -34,7 +34,7 @@ describe('Instance Updated Worker', function () {
           completed: new Date().getTime()
         }
       }
-      const state = Worker._instanceState(cv, {})
+      const state = JobModule._instanceState(cv, {})
       assert.equal(state, 'running')
       done()
     })
@@ -53,7 +53,7 @@ describe('Instance Updated Worker', function () {
           }
         }
       }
-      const state = Worker._instanceState(cv, container)
+      const state = JobModule._instanceState(cv, container)
       assert.equal(state, 'stopped')
       done()
     })
@@ -64,7 +64,7 @@ describe('Instance Updated Worker', function () {
         build: {}
       }
       const container = {}
-      const state = Worker._instanceState(cv, container)
+      const state = JobModule._instanceState(cv, container)
       assert.equal(state, 'building')
       done()
     })
@@ -75,147 +75,12 @@ describe('Instance Updated Worker', function () {
         build: {}
       }
       const container = {}
-      const state = Worker._instanceState(cv, container)
+      const state = JobModule._instanceState(cv, container)
       assert.isNull(state)
       done()
     })
   })
   describe('worker', function () {
-    describe('invalid Job', function () {
-      it('should throw a task fatal error if the job is missing entirely', function (done) {
-        Worker().asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /job.+required/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the job is not an object', function (done) {
-        Worker(true).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /must be an object/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the job is missing a instance', function (done) {
-        Worker({}).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /instance.*required/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the instance is not an object', function (done) {
-        Worker({ instance: 1 }).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /instance.*object/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the instance owner is not defined', function (done) {
-        Worker({ instance: {} }).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /owner.*required/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the instance owner.github is not defined', function (done) {
-        Worker({ instance: { owner: {} } }).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /github.*required/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the instance owner.github is not a number', function (done) {
-        const payload = {
-          instance:
-          {
-            owner: {
-              github: 'anton'
-            }
-          }
-        }
-        Worker(payload).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /github.*number/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the contextVersions is not defined', function (done) {
-        const payload = {
-          instance:
-          {
-            owner: {
-              github: 1
-            }
-          }
-        }
-        Worker(payload).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /contextVersions.*required/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the contextVersions is not an array', function (done) {
-        const payload = {
-          instance:
-          {
-            owner: {
-              github: 1
-            },
-            contextVersions: {}
-          }
-        }
-        Worker(payload).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /contextVersions.*array/i)
-          done()
-        })
-      })
-
-      it('should throw a task fatal error if the contextVersion is not an object', function (done) {
-        const payload = {
-          instance:
-          {
-            owner: {
-              github: 1
-            },
-            contextVersions: [1]
-          }
-        }
-        Worker(payload).asCallback(function (err) {
-          assert.isDefined(err)
-          assert.instanceOf(err, WorkerStopError)
-          assert.isDefined(err.data.err)
-          assert.match(err.data.err.message, /context version.*must be an object/i)
-          done()
-        })
-      })
-    })
     describe('regular flow', function () {
       beforeEach(function (done) {
         sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
@@ -252,6 +117,33 @@ describe('Instance Updated Worker', function () {
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isDefined(err)
           assert.equal(err.message, githubError.message)
+          done()
+        })
+      })
+
+      it('should do nothing if testing instance', function (done) {
+        const instance = {
+          owner: {
+            github: 2828361
+          },
+          isTesting: true,
+          contextVersions: [
+            {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ],
+              build: {
+                failed: true
+              }
+            }
+          ]
+        }
+        Worker({ instance: instance }).asCallback(function (err) {
+          assert.isNull(err)
+          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })

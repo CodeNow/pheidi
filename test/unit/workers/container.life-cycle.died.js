@@ -3,7 +3,7 @@
 const chai = require('chai')
 const FatalGithubError = require('notifications/github.status').FatalGithubError
 const GitHubStatus = require('notifications/github.status')
-const mongodbHelper = require('mongo-helper')
+const Mongo = require('models/mongo')
 const PreconditionError = require('notifications/github.status').PreconditionError
 const Promise = require('bluebird')
 const sinon = require('sinon')
@@ -13,7 +13,8 @@ require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
 
-const Worker = require('workers/container.life-cycle.died')
+const JobModule = require('workers/container.life-cycle.died')
+const Worker = JobModule.task
 
 describe('Container life-cycle died', () => {
   describe('Worker', () => {
@@ -52,35 +53,27 @@ describe('Container life-cycle died', () => {
         dockerContainer: mockParams.inspectData.Id
       }
     }
-    let mongoHelperStubs
-    let collectionFindStub
 
     beforeEach((done) => {
-      collectionFindStub = sinon.stub().yields(null, [mockInstance])
-      mongoHelperStubs = {
-        db: {
-          collection: sinon.stub().returns({
-            find: sinon.stub().returns({
-              toArray: collectionFindStub
-            })
-          })
-        }
-      }
-      sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
-      sinon.stub(Worker, 'calculateStatus').returns(mockStatus)
+      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'findInstancesAsync').resolves([mockInstance])
+      sinon.stub(JobModule, 'calculateStatus').returns(mockStatus)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
       done()
     })
 
     afterEach((done) => {
-      mongodbHelper.helper.restore()
-      Worker.calculateStatus.restore()
+      Mongo.prototype.connect.restore()
+      Mongo.prototype.close.restore()
+      Mongo.prototype.findInstancesAsync.restore()
+      JobModule.calculateStatus.restore()
       GitHubStatus.prototype.setStatus.restore()
       done()
     })
 
     it('should fail if no instance is found', (done) => {
-      collectionFindStub.yields()
+      Mongo.prototype.findInstancesAsync.resolves([])
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, WorkerStopError)
@@ -90,7 +83,7 @@ describe('Container life-cycle died', () => {
     })
 
     it('should fail if the instance does not have the user container attached', (done) => {
-      collectionFindStub.yields(null, [{
+      Mongo.prototype.findInstancesAsync.resolves([{
         _id: '1234',
         isTesting: true,
         container: {
@@ -106,7 +99,7 @@ describe('Container life-cycle died', () => {
     })
 
     it('should fail if the instance has no main acv', (done) => {
-      collectionFindStub.yields(null, [{
+      Mongo.prototype.findInstancesAsync.resolves([{
         _id: '1234',
         isTesting: true,
         contextVersion: {
@@ -129,8 +122,8 @@ describe('Container life-cycle died', () => {
     it('should calculate the status', (done) => {
       Worker(mockParams).asCallback((err) => {
         assert.isNull(err)
-        sinon.assert.calledOnce(Worker.calculateStatus)
-        sinon.assert.calledWith(Worker.calculateStatus, mockParams)
+        sinon.assert.calledOnce(JobModule.calculateStatus)
+        sinon.assert.calledWith(JobModule.calculateStatus, mockParams)
         done()
       })
     })
@@ -182,7 +175,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), 'failure')
+      assert.equal(JobModule.calculateStatus(mockJob), 'failure')
       done()
     })
 
@@ -199,7 +192,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), null)
+      assert.equal(JobModule.calculateStatus(mockJob), null)
       done()
     })
 
@@ -216,7 +209,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), 'success')
+      assert.equal(JobModule.calculateStatus(mockJob), 'success')
       done()
     })
 
@@ -233,7 +226,7 @@ describe('Container life-cycle died', () => {
           }
         }
       }
-      assert.equal(Worker.calculateStatus(mockJob), 'error')
+      assert.equal(JobModule.calculateStatus(mockJob), 'error')
       done()
     })
   })

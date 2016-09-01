@@ -3,7 +3,7 @@
 const chai = require('chai')
 const FatalGithubError = require('notifications/github.status').FatalGithubError
 const GitHubStatus = require('notifications/github.status')
-const mongodbHelper = require('mongo-helper')
+const Mongo = require('models/mongo')
 const PreconditionError = require('notifications/github.status').PreconditionError
 const Promise = require('bluebird')
 const sinon = require('sinon')
@@ -13,7 +13,7 @@ require('sinon-as-promised')(Promise)
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
 
-const Worker = require('workers/container.life-cycle.started')
+const Worker = require('workers/container.life-cycle.started').task
 
 describe('Container life-cycle started', () => {
   describe('Worker', () => {
@@ -51,36 +51,29 @@ describe('Container life-cycle started', () => {
       _id: 'cv id',
       context: 'deadbeefdead'
     }
-    let mongoHelperStubs
-    let collectionFindStub
 
     beforeEach((done) => {
       sinon.stub(Promise.prototype, 'delay').resolves()
-      collectionFindStub = sinon.stub().yields(null, [mockInstance])
-      mongoHelperStubs = {
-        findOneContextVersionAsync: sinon.stub().resolves(mockCv),
-        db: {
-          collection: sinon.stub().returns({
-            find: sinon.stub().returns({
-              toArray: collectionFindStub
-            })
-          })
-        }
-      }
-      sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
+      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
+      sinon.stub(Mongo.prototype, 'findInstancesAsync').resolves([mockInstance])
+      sinon.stub(Mongo.prototype, 'findOneContextVersionAsync').resolves(mockCv)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
       done()
     })
 
     afterEach((done) => {
       Promise.prototype.delay.restore()
-      mongodbHelper.helper.restore()
+      Mongo.prototype.connect.restore()
+      Mongo.prototype.close.restore()
+      Mongo.prototype.findInstancesAsync.restore()
+      Mongo.prototype.findOneContextVersionAsync.restore()
       GitHubStatus.prototype.setStatus.restore()
       done()
     })
 
     it('should fail if no context version is found', (done) => {
-      collectionFindStub.yields(null)
+      Mongo.prototype.findInstancesAsync.resolves(null)
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, WorkerStopError)
@@ -90,7 +83,7 @@ describe('Container life-cycle started', () => {
     })
 
     it('should fail if no instance is found', (done) => {
-      mongoHelperStubs.findOneContextVersionAsync.resolves()
+      Mongo.prototype.findInstancesAsync.resolves()
       Worker(mockParams).asCallback((err) => {
         assert.isDefined(err)
         assert.instanceOf(err, WorkerStopError)
@@ -100,7 +93,7 @@ describe('Container life-cycle started', () => {
     })
 
     it('should fail if the instance has no main acv', (done) => {
-      collectionFindStub.yields(null, [{
+      Mongo.prototype.findInstancesAsync.resolves([{
         _id: '1234',
         isTesting: true,
         contextVersion: {
