@@ -183,7 +183,7 @@ describe('sendgrid', function () {
         })
       })
 
-      describe('#paymentMethodAddedOrRemoved', function () {
+      describe('#sendBillingEmail', function () {
         const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
         const templateName = 'hello'
         const organizationName = 'Runnable'
@@ -198,14 +198,13 @@ describe('sendgrid', function () {
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.sendEmail.returns(Promise.resolve(true))
 
-          sendgrid.paymentMethodAddedOrRemoved(organizationName, paymentMethodOwnerEmail, PAYMENT_METHOD_ADDED, templateName)
+          sendgrid.sendBillingEmail(organizationName, paymentMethodOwnerEmail, PAYMENT_METHOD_ADDED, templateName)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.sendEmail)
               var sendEmailOptions = sendgrid.sendEmail.args[0][0]
-              console.log(sendEmailOptions)
               assert.equal(sendEmailOptions.email, paymentMethodOwnerEmail)
               assert.equal(sendEmailOptions.fromname, 'Runnable Support')
-              assert.equal(sendEmailOptions.subject, 'Your payment method has been added')
+              assert.equal(sendEmailOptions.subject, PAYMENT_METHOD_ADDED.en.subject)
               assert.isString(sendEmailOptions.template)
               assert.equal(sendEmailOptions.template, templateName)
               assert.isString(sendEmailOptions.body)
@@ -223,18 +222,18 @@ describe('sendgrid', function () {
         const organizationName = 'Runnable'
         const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
         beforeEach(function (done) {
-          sinon.stub(sendgrid, 'paymentMethodAddedOrRemoved').resolves()
+          sinon.stub(sendgrid, 'sendBillingEmail').resolves()
           done()
         })
         afterEach(function (done) {
-          sendgrid.paymentMethodAddedOrRemoved.restore()
+          sendgrid.sendBillingEmail.restore()
           done()
         })
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.paymentMethodAdded(organizationName, paymentMethodOwnerEmail)
             .then(function () {
-              sinon.assert.calledOnce(sendgrid.paymentMethodAddedOrRemoved)
-              var paymentMethodAddedOrRemovedArgs = sendgrid.paymentMethodAddedOrRemoved.args[0]
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
               assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
               assert.equal(paymentMethodAddedOrRemovedArgs[1], paymentMethodOwnerEmail)
               assert.equal(paymentMethodAddedOrRemovedArgs[2], PAYMENT_METHOD_ADDED)
@@ -248,18 +247,18 @@ describe('sendgrid', function () {
         const organizationName = 'Runnable'
         const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
         beforeEach(function (done) {
-          sinon.stub(sendgrid, 'paymentMethodAddedOrRemoved').resolves()
+          sinon.stub(sendgrid, 'sendBillingEmail').resolves()
           done()
         })
         afterEach(function (done) {
-          sendgrid.paymentMethodAddedOrRemoved.restore()
+          sendgrid.sendBillingEmail.restore()
           done()
         })
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.paymentMethodRemoved(organizationName, paymentMethodOwnerEmail)
             .then(function () {
-              sinon.assert.calledOnce(sendgrid.paymentMethodAddedOrRemoved)
-              var paymentMethodAddedOrRemovedArgs = sendgrid.paymentMethodAddedOrRemoved.args[0]
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
               assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
               assert.equal(paymentMethodAddedOrRemovedArgs[1], paymentMethodOwnerEmail)
               assert.equal(paymentMethodAddedOrRemovedArgs[2], PAYMENT_METHOD_REMOVED)
