@@ -9,6 +9,7 @@
     "coverage": "NODE_ENV=test NODE_PATH=./lib istanbul cover ./node_modules/mocha/bin/_mocha -- $npm_package_options_mocha test/ && npm run check-coverage",
     "start": "NODE_PATH=./lib node index.js",
     "unit": "NODE_ENV=test NODE_PATH=./lib mocha $npm_package_options_mocha test/unit",
+    "unit-no-bail": "NODE_ENV=test NODE_PATH=./lib mocha --timeout 5000 --recursive --reporter spec test/unit",
     "test": "npm run lint && npm run coverage"
   },
   "keywords": [
