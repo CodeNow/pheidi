@@ -184,14 +184,10 @@ describe('sendgrid', function () {
       })
 
       describe('#paymentMethodAddedOrRemoved', function () {
-        var org
         const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
         const templateName = 'hello'
+        const organizationName = 'Runnable'
         beforeEach(function (done) {
-          org = {
-            login: 'Runnable',
-            id: 12312231
-          }
           sinon.stub(sendgrid, 'sendEmail')
           done()
         })
@@ -202,7 +198,7 @@ describe('sendgrid', function () {
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.sendEmail.returns(Promise.resolve(true))
 
-          sendgrid.paymentMethodAddedOrRemoved(org, paymentMethodOwnerEmail, PAYMENT_METHOD_ADDED, templateName)
+          sendgrid.paymentMethodAddedOrRemoved(organizationName, paymentMethodOwnerEmail, PAYMENT_METHOD_ADDED, templateName)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.sendEmail)
               var sendEmailOptions = sendgrid.sendEmail.args[0][0]
@@ -224,13 +220,9 @@ describe('sendgrid', function () {
       })
 
       describe('#paymentMethodAdded', function () {
-        var org
+        const organizationName = 'Runnable'
         const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
         beforeEach(function (done) {
-          org = {
-            login: 'Runnable',
-            id: 12312231
-          }
           sinon.stub(sendgrid, 'paymentMethodAddedOrRemoved').resolves()
           done()
         })
@@ -239,11 +231,11 @@ describe('sendgrid', function () {
           done()
         })
         it('should attempt to send emails with the given arguments', function (done) {
-          sendgrid.paymentMethodAdded(org, paymentMethodOwnerEmail)
+          sendgrid.paymentMethodAdded(organizationName, paymentMethodOwnerEmail)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.paymentMethodAddedOrRemoved)
               var paymentMethodAddedOrRemovedArgs = sendgrid.paymentMethodAddedOrRemoved.args[0]
-              assert.equal(paymentMethodAddedOrRemovedArgs[0], org)
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
               assert.equal(paymentMethodAddedOrRemovedArgs[1], paymentMethodOwnerEmail)
               assert.equal(paymentMethodAddedOrRemovedArgs[2], PAYMENT_METHOD_ADDED)
               assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_PAYMENT_METHOD_ADDED_TEMPLATE)
@@ -253,13 +245,9 @@ describe('sendgrid', function () {
       })
 
       describe('#paymentMethodRemoved', function () {
-        var org
+        const organizationName = 'Runnable'
         const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
         beforeEach(function (done) {
-          org = {
-            login: 'Runnable',
-            id: 12312231
-          }
           sinon.stub(sendgrid, 'paymentMethodAddedOrRemoved').resolves()
           done()
         })
@@ -268,11 +256,11 @@ describe('sendgrid', function () {
           done()
         })
         it('should attempt to send emails with the given arguments', function (done) {
-          sendgrid.paymentMethodRemoved(org, paymentMethodOwnerEmail)
+          sendgrid.paymentMethodRemoved(organizationName, paymentMethodOwnerEmail)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.paymentMethodAddedOrRemoved)
               var paymentMethodAddedOrRemovedArgs = sendgrid.paymentMethodAddedOrRemoved.args[0]
-              assert.equal(paymentMethodAddedOrRemovedArgs[0], org)
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
               assert.equal(paymentMethodAddedOrRemovedArgs[1], paymentMethodOwnerEmail)
               assert.equal(paymentMethodAddedOrRemovedArgs[2], PAYMENT_METHOD_REMOVED)
               assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_PAYMENT_METHOD_REMOVED_TEMPLATE)
