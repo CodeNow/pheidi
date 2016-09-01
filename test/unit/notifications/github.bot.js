@@ -247,7 +247,10 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
+      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
+      message += 'title="Running" width="9" height="9">[inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
+      message += ' to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment]'
+      message += '(https://web.runnable.dev/codenow/inst-1)<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
@@ -276,7 +279,10 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
+      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
+      message += 'title="Running" width="9" height="9">[inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
+      message += 'to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment]'
+      message += '(https://web.runnable.dev/codenow/inst-1)<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isNull(error)
         sinon.assert.calledOnce(tracker.set)
@@ -334,7 +340,7 @@ describe('GitHubBot', function () {
     })
 
     it('should not do create comment if cache found', function (done) {
-      const message = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
+      const message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9">[inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment](https://web.runnable.dev/codenow/inst-1)<sub>*From [Runnable](http://runnable.com)*</sub>'
       tracker.get.returns(message)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -360,7 +366,7 @@ describe('GitHubBot', function () {
 
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentsByUser.yieldsAsync(null, [{
-        body: 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)',
+        body: 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9">[inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment](https://web.runnable.dev/codenow/inst-1)<sub>*From [Runnable](http://runnable.com)*</sub>',
         id: 2
       }])
       const githubBot = new GitHubBot('anton-token')
@@ -561,7 +567,7 @@ describe('GitHubBot', function () {
     })
   })
   describe('#_render', function () {
-    it('should return correct message for the running state', function (done) {
+    it('should return correct message for the running single instance', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -570,46 +576,7 @@ describe('GitHubBot', function () {
         state: 'running'
       }
       const md = githubBot._render(gitInfo, ctx.instance)
-      assert.equal(md, 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)')
-      done()
-    })
-
-    it('should return correct message for the building state', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'building'
-      }
-      const md = githubBot._render(gitInfo, ctx.instance)
-      assert.equal(md, 'The latest push to PR-2 is building. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
-      done()
-    })
-
-    it('should return correct message for the stopped state', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'stopped'
-      }
-      const md = githubBot._render(gitInfo, ctx.instance)
-      assert.equal(md, 'The latest push to PR-2 has stopped. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
-      done()
-    })
-
-    it('should return correct message for the failed state', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'failed'
-      }
-      const md = githubBot._render(gitInfo, ctx.instance)
-      assert.equal(md, 'The latest push to PR-2 has failed to build. Check out the logs [inst-1](https://web.runnable.dev/codenow/inst-1)')
+      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9">[inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment](https://web.runnable.dev/codenow/inst-1)<sub>*From [Runnable](http://runnable.com)*</sub>')
       done()
     })
 
@@ -622,10 +589,12 @@ describe('GitHubBot', function () {
         state: 'running'
       }
       const md = githubBot._render(gitInfo, ctx.instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
-      var result = 'The latest push to PR-2 is running on [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
-      result += '\n\nhere are the other containers in your cluster:\n'
-      result += ' - [inst-2](https://web.runnable.dev/codenow/inst-2)'
-      assert.equal(md, result)
+      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
+      message += 'title="Running" width="9" height="9">[inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
+      message += 'to [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com)[your environment]'
+      message += '(https://web.runnable.dev/codenow/inst-1)<sub>Related containers: '
+      message += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9"> [inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
+      assert.equal(md, message)
       done()
     })
   })
@@ -665,9 +634,9 @@ describe('GitHubBot', function () {
         }
       ]
       const md = githubBot._renderIsolatedInstance(insts)
-      let expectedMd = '\n\nhere are the other containers in your cluster:\n'
-      expectedMd += ' - [inst-1](https://web.runnable.dev/codenow/inst-1)\n'
-      expectedMd += ' - [inst-2](https://web.runnable.dev/codenow/inst-2)'
+      let expectedMd = '<sub>Related containers: <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" '
+      expectedMd += 'title="Failed" width="9" height="9"> [inst-1](https://web.runnable.dev/codenow/inst-1) '
+      expectedMd += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9"> [inst-2](https://web.runnable.dev/codenow/inst-2)'
       assert.equal(md, expectedMd)
       done()
     })
@@ -837,6 +806,39 @@ describe('GitHubBot', function () {
           GitHubBot.prototype._deleteComments)
         done()
       })
+    })
+  })
+  describe('_renderStatusIcon', () => {
+    it('should return correct icon for running state', () => {
+      const githubBot = new GitHubBot()
+      assert.equal(
+        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9">',
+        githubBot._renderStatusIcon('running')
+      )
+    })
+
+    it('should return correct icon for stopped state', () => {
+      const githubBot = new GitHubBot()
+      assert.equal(
+        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-gray.svg" title="Stopped" width="9" height="9">',
+        githubBot._renderStatusIcon('stopped')
+      )
+    })
+
+    it('should return correct icon for building state', () => {
+      const githubBot = new GitHubBot()
+      assert.equal(
+        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-orange.svg" title="Building" width="9" height="9">',
+        githubBot._renderStatusIcon('building')
+      )
+    })
+
+    it('should return errored icon as default', () => {
+      const githubBot = new GitHubBot()
+      assert.equal(
+        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9">',
+        githubBot._renderStatusIcon('error')
+      )
     })
   })
 })
