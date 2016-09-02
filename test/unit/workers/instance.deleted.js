@@ -20,14 +20,14 @@ describe('Instance Deleted Worker', function () {
   describe('worker', function () {
     describe('regular flow', function () {
       beforeEach(function (done) {
-        sinon.stub(GitHubBot.prototype, 'deleteBranchNotificationsAsync').returns()
-        sinon.stub(GitHubBot.prototype, 'deleteAllNotificationsAsync').returns()
+        sinon.stub(GitHubBot.prototype, 'deleteBranchNotifications').returns()
+        sinon.stub(GitHubBot.prototype, 'deleteAllNotifications').returns()
         done()
       })
 
       afterEach(function (done) {
-        GitHubBot.prototype.deleteBranchNotificationsAsync.restore()
-        GitHubBot.prototype.deleteAllNotificationsAsync.restore()
+        GitHubBot.prototype.deleteBranchNotifications.restore()
+        GitHubBot.prototype.deleteAllNotifications.restore()
         done()
       })
 
@@ -50,8 +50,8 @@ describe('Instance Deleted Worker', function () {
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotifications)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotifications)
           done()
         })
       })
@@ -74,8 +74,8 @@ describe('Instance Deleted Worker', function () {
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotifications)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotifications)
           done()
         })
       })
@@ -99,16 +99,16 @@ describe('Instance Deleted Worker', function () {
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotifications)
+          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotifications)
           done()
         })
       })
 
       describe('non master instance', function () {
-        it('should fail if deleteBranchNotificationsAsync', function (done) {
+        it('should fail if deleteBranchNotifications', function (done) {
           const githubError = new Error('GitHub error')
-          GitHubBot.prototype.deleteBranchNotificationsAsync.rejects(githubError)
+          GitHubBot.prototype.deleteBranchNotifications.rejects(githubError)
           const instance = {
             owner: {
               github: 2828361,
@@ -132,7 +132,7 @@ describe('Instance Deleted Worker', function () {
           })
         })
 
-        it('should call deleteBranchNotificationsAsync', function (done) {
+        it('should call deleteBranchNotifications', function (done) {
           const instance = {
             id: '57153cef3f41b71d004e7c27',
             owner: {
@@ -152,8 +152,8 @@ describe('Instance Deleted Worker', function () {
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isNull(err)
-            sinon.assert.calledOnce(GitHubBot.prototype.deleteBranchNotificationsAsync)
-            sinon.assert.calledWith(GitHubBot.prototype.deleteBranchNotificationsAsync,
+            sinon.assert.calledOnce(GitHubBot.prototype.deleteBranchNotifications)
+            sinon.assert.calledWith(GitHubBot.prototype.deleteBranchNotifications,
               { repo: 'CodeNow/api',
                 branch: 'feature1'
               })
@@ -163,9 +163,9 @@ describe('Instance Deleted Worker', function () {
       })
 
       describe('master instance', function () {
-        it('should fail if deleteAllNotificationsAsync failed', function (done) {
+        it('should fail if deleteAllNotifications failed', function (done) {
           const githubError = new Error('GitHub error')
-          GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
+          GitHubBot.prototype.deleteAllNotifications.rejects(githubError)
           const instance = {
             owner: {
               github: 2828361,
@@ -192,7 +192,7 @@ describe('Instance Deleted Worker', function () {
 
         it('should return WorkerStopError if runnabot has no org access', function (done) {
           const githubError = new AccessDeniedError('No org access for runnabot')
-          GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
+          GitHubBot.prototype.deleteAllNotifications.rejects(githubError)
           const instance = {
             owner: {
               github: 2828361,
@@ -220,7 +220,7 @@ describe('Instance Deleted Worker', function () {
 
         it('should return WorkerStopError if runnabot has reached rate limit', function (done) {
           const githubError = new RateLimitedError('Runnabot has reached rate-limit')
-          GitHubBot.prototype.deleteAllNotificationsAsync.rejects(githubError)
+          GitHubBot.prototype.deleteAllNotifications.rejects(githubError)
           const instance = {
             owner: {
               github: 2828361,
@@ -246,7 +246,7 @@ describe('Instance Deleted Worker', function () {
           })
         })
 
-        it('should call deleteAllNotificationsAsync', function (done) {
+        it('should call deleteAllNotifications', function (done) {
           const instance = {
             id: '57153cef3f41b71d004e7c27',
             masterPod: true,
@@ -267,8 +267,8 @@ describe('Instance Deleted Worker', function () {
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isNull(err)
-            sinon.assert.calledOnce(GitHubBot.prototype.deleteAllNotificationsAsync)
-            sinon.assert.calledWith(GitHubBot.prototype.deleteAllNotificationsAsync,
+            sinon.assert.calledOnce(GitHubBot.prototype.deleteAllNotifications)
+            sinon.assert.calledWith(GitHubBot.prototype.deleteAllNotifications,
               { repo: 'CodeNow/api',
                 branch: 'feature1'
               })

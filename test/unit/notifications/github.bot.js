@@ -5,6 +5,7 @@ chai.use(require('chai-as-promised'))
 const assert = chai.assert
 const clone = require('101/clone')
 const sinon = require('sinon')
+require('sinon-as-promised')(require('bluebird'))
 const GitHubBot = require('notifications/github.bot')
 const GitHub = require('models/github')
 const tracker = require('models/tracker')
@@ -80,26 +81,26 @@ describe('GitHubBot', function () {
           id: 1
         }
       ]
-      sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, ctx.comments)
-      sinon.stub(GitHub.prototype, 'deleteComment').yieldsAsync(null)
+      sinon.stub(GitHub.prototype, 'findCommentsByUserAsync').resolves(ctx.comments)
+      sinon.stub(GitHub.prototype, 'deleteCommentAsync').resolves(null)
       done()
     })
 
     afterEach(function (done) {
-      GitHub.prototype.findCommentsByUser.restore()
-      GitHub.prototype.deleteComment.restore()
+      GitHub.prototype.findCommentsByUserAsync.restore()
+      GitHub.prototype.deleteCommentAsync.restore()
       done()
     })
 
     it('should fail if findCommentsByUser failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.findCommentsByUser.yieldsAsync(githubError)
+      GitHub.prototype.findCommentsByUserAsync.rejects(githubError)
       const githubBot = new GitHubBot()
       const gitInfo = {
         repo: 'codenow/hellonode',
         number: 2
       }
-      githubBot._deleteComments(gitInfo, function (error) {
+      githubBot._deleteComments(gitInfo).asCallback(function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -108,13 +109,13 @@ describe('GitHubBot', function () {
 
     it('should fail if delete comment failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.deleteComment.yieldsAsync(githubError)
+      GitHub.prototype.deleteCommentAsync.rejects(githubError)
       const githubBot = new GitHubBot()
       const gitInfo = {
         repo: 'codenow/hellonode',
         number: 2
       }
-      githubBot._deleteComments(gitInfo, function (error) {
+      githubBot._deleteComments(gitInfo).asCallback(function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
         done()
@@ -127,9 +128,9 @@ describe('GitHubBot', function () {
         repo: 'codenow/hellonode',
         number: 2
       }
-      githubBot._deleteComments(gitInfo, function (error) {
+      githubBot._deleteComments(gitInfo).asCallback(function (error) {
         assert.isNull(error)
-        sinon.assert.callOrder(GitHub.prototype.findCommentsByUser, GitHub.prototype.deleteComment)
+        sinon.assert.callOrder(GitHub.prototype.findCommentsByUserAsync, GitHub.prototype.deleteCommentAsync)
         done()
       })
     })
@@ -140,10 +141,10 @@ describe('GitHubBot', function () {
         repo: 'codenow/hellonode',
         number: 2
       }
-      githubBot._deleteComments(gitInfo, function (error) {
+      githubBot._deleteComments(gitInfo).asCallback(function (error) {
         assert.isNull(error)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser, gitInfo.repo, gitInfo.number)
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUserAsync)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUserAsync, gitInfo.repo, gitInfo.number)
         done()
       })
     })
@@ -154,11 +155,11 @@ describe('GitHubBot', function () {
         repo: 'codenow/hellonode',
         number: 2
       }
-      githubBot._deleteComments(gitInfo, function (error) {
+      githubBot._deleteComments(gitInfo).asCallback(function (error) {
         assert.isNull(error)
-        sinon.assert.calledTwice(GitHub.prototype.deleteComment)
-        sinon.assert.calledWith(GitHub.prototype.deleteComment, gitInfo.repo, ctx.comments[0].id)
-        sinon.assert.calledWith(GitHub.prototype.deleteComment, gitInfo.repo, ctx.comments[1].id)
+        sinon.assert.calledTwice(GitHub.prototype.deleteCommentAsync)
+        sinon.assert.calledWith(GitHub.prototype.deleteCommentAsync, gitInfo.repo, ctx.comments[0].id)
+        sinon.assert.calledWith(GitHub.prototype.deleteCommentAsync, gitInfo.repo, ctx.comments[1].id)
         done()
       })
     })
@@ -171,9 +172,9 @@ describe('GitHubBot', function () {
         body: commentText,
         id: 2
       }
-      sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, [ctx.comment])
+      sinon.stub(GitHub.prototype, 'findCommentsByUserAsync').resolves([ctx.comment])
       sinon.stub(GitHub.prototype, 'addComment').yieldsAsync(null)
-      sinon.stub(GitHub.prototype, 'deleteComment').yieldsAsync(null)
+      sinon.stub(GitHub.prototype, 'deleteCommentAsync').resolves(null)
       sinon.stub(tracker, 'get').returns(null)
       sinon.stub(tracker, 'set').returns(null)
       sinon.stub(tracker, 'del').returns(null)
@@ -181,9 +182,9 @@ describe('GitHubBot', function () {
     })
 
     afterEach(function (done) {
-      GitHub.prototype.findCommentsByUser.restore()
+      GitHub.prototype.findCommentsByUserAsync.restore()
       GitHub.prototype.addComment.restore()
-      GitHub.prototype.deleteComment.restore()
+      GitHub.prototype.deleteCommentAsync.restore()
       tracker.get.restore()
       tracker.set.restore()
       tracker.del.restore()
@@ -192,7 +193,7 @@ describe('GitHubBot', function () {
 
     it('should fail if findCommentsByUser failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.findCommentsByUser.yieldsAsync(githubError)
+      GitHub.prototype.findCommentsByUserAsync.rejects(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -208,7 +209,7 @@ describe('GitHubBot', function () {
 
     it('should fail if deleteComment failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.deleteComment.yieldsAsync(githubError)
+      GitHub.prototype.deleteCommentAsync.rejects(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -224,7 +225,7 @@ describe('GitHubBot', function () {
     })
 
     it('should fail if addComment failed', function (done) {
-      GitHub.prototype.findCommentsByUser.yieldsAsync(null, null)
+      GitHub.prototype.findCommentsByUserAsync.resolves(null)
       const githubError = new Error('GitHub error')
       GitHub.prototype.addComment.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
@@ -254,26 +255,23 @@ describe('GitHubBot', function () {
       message += ' to [your environment](https://web.runnable.dev/codenow/inst-1)'
       message += '\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
-        assert.isUndefined(error)
+        assert.isNull(error)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
+        sinon.assert.calledTwice(GitHub.prototype.findCommentsByUserAsync)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUserAsync,
           gitInfo.repo,
           gitInfo.number,
-          process.env.RUNNABOT_GITHUB_USERNAME,
-          sinon.match.func)
-        sinon.assert.calledOnce(GitHub.prototype.deleteComment)
-        sinon.assert.calledWith(GitHub.prototype.deleteComment,
+          process.env.RUNNABOT_GITHUB_USERNAME)
+        sinon.assert.calledOnce(GitHub.prototype.deleteCommentAsync)
+        sinon.assert.calledWith(GitHub.prototype.deleteCommentAsync,
           gitInfo.repo,
-          ctx.comment.id,
-          message,
-          sinon.match.func)
+          ctx.comment.id)
         done()
       })
     })
 
     it('should call createComment if comment not found', function (done) {
-      GitHub.prototype.findCommentsByUser.yieldsAsync(null, null)
+      GitHub.prototype.findCommentsByUserAsync.resolves(null)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -286,21 +284,18 @@ describe('GitHubBot', function () {
       message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
       message += '\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
-        assert.isUndefined(error)
+        assert.isNull(error)
         sinon.assert.calledOnce(tracker.set)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
-        sinon.assert.calledTwice(GitHub.prototype.findCommentsByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
+        sinon.assert.calledTwice(GitHub.prototype.findCommentsByUserAsync)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUserAsync,
           gitInfo.repo,
           gitInfo.number,
-          process.env.RUNNABOT_GITHUB_USERNAME,
-          sinon.match.func)
+          process.env.RUNNABOT_GITHUB_USERNAME)
         sinon.assert.calledOnce(GitHub.prototype.addComment)
         sinon.assert.calledWith(GitHub.prototype.addComment,
           gitInfo.repo,
-          gitInfo.number,
-          message,
-          sinon.match.func
+          gitInfo.number
         )
         done()
       })
@@ -308,7 +303,7 @@ describe('GitHubBot', function () {
 
     it('should delete cache if deleteComment failed', function (done) {
       const githubBot = new GitHubBot('anton-token')
-      GitHub.prototype.deleteComment.yieldsAsync(new Error('GitHub error'))
+      GitHub.prototype.deleteCommentAsync.rejects(new Error('GitHub error'))
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
@@ -324,7 +319,7 @@ describe('GitHubBot', function () {
     })
 
     it('should delete cache if create comment failed', function (done) {
-      GitHub.prototype.findCommentsByUser.yieldsAsync(null, null)
+      GitHub.prototype.findCommentsByUserAsync.resolves(null)
       GitHub.prototype.addComment.yieldsAsync(new Error('GitHub error'))
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -355,13 +350,12 @@ describe('GitHubBot', function () {
         assert.isNull(error)
         sinon.assert.calledOnce(tracker.get)
         sinon.assert.calledWith(tracker.get, 'codenow/hellonode/2/inst-1-id')
-        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
+        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUserAsync)
+        sinon.assert.calledWith(GitHub.prototype.findCommentsByUserAsync,
           gitInfo.repo,
           gitInfo.number,
-          process.env.RUNNABOT_GITHUB_USERNAME,
-          sinon.match.func)
-        sinon.assert.notCalled(GitHub.prototype.deleteComment)
+          process.env.RUNNABOT_GITHUB_USERNAME)
+        sinon.assert.notCalled(GitHub.prototype.deleteCommentAsync)
         done()
       })
     })
@@ -625,8 +619,8 @@ describe('GitHubBot', function () {
         { number: 1 },
         { number: 2 }
       ]
-      sinon.stub(GitHub.prototype, 'listOpenPullRequests').yieldsAsync(null, ctx.prs)
-      sinon.stub(GitHubBot.prototype, '_deleteComments').yieldsAsync(null)
+      sinon.stub(GitHub.prototype, 'listOpenPullRequestsAsync').resolves(ctx.prs)
+      sinon.stub(GitHubBot.prototype, '_deleteComments').resolves(null)
       done()
     })
 
@@ -635,16 +629,16 @@ describe('GitHubBot', function () {
         { number: 1 },
         { number: 2 }
       ]
-      GitHub.prototype.listOpenPullRequests.restore()
+      GitHub.prototype.listOpenPullRequestsAsync.restore()
       GitHubBot.prototype._deleteComments.restore()
       done()
     })
 
     it('should fail if listOpenPullRequests failed', function (done) {
       const error = new Error('GitHub error')
-      GitHub.prototype.listOpenPullRequests.yieldsAsync(error)
+      GitHub.prototype.listOpenPullRequestsAsync.rejects(error)
       const githubBot = new GitHubBot()
-      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, error)
         done()
@@ -653,9 +647,9 @@ describe('GitHubBot', function () {
 
     it('should fail if _deleteComments failed', function (done) {
       const error = new Error('GitHub error')
-      GitHubBot.prototype._deleteComments.yieldsAsync(error)
+      GitHubBot.prototype._deleteComments.rejects(error)
       const githubBot = new GitHubBot()
-      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, error)
         done()
@@ -664,17 +658,17 @@ describe('GitHubBot', function () {
 
     it('should call listOpenPullRequests once', function (done) {
       const githubBot = new GitHubBot()
-      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }).asCallback(function (err) {
         assert.isNull(err)
-        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequests)
-        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequests, 'CodeNow/api')
+        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsAsync)
+        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsAsync, 'CodeNow/api')
         done()
       })
     })
 
     it('should call _deleteComments twice', function (done) {
       const githubBot = new GitHubBot()
-      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }).asCallback(function (err) {
         assert.isNull(err)
         sinon.assert.calledTwice(GitHubBot.prototype._deleteComments)
         sinon.assert.calledWith(GitHubBot.prototype._deleteComments, {
@@ -691,9 +685,9 @@ describe('GitHubBot', function () {
 
     it('should call functions in order', function (done) {
       const githubBot = new GitHubBot()
-      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }, function (err) {
+      githubBot.deleteAllNotifications({ repo: 'CodeNow/api' }).asCallback(function (err) {
         assert.isNull(err)
-        sinon.assert.callOrder(GitHub.prototype.listOpenPullRequests,
+        sinon.assert.callOrder(GitHub.prototype.listOpenPullRequestsAsync,
           GitHubBot.prototype._deleteComments)
         done()
       })
@@ -710,24 +704,24 @@ describe('GitHubBot', function () {
         repo: 'CodeNow/api',
         branch: 'feature-1'
       }
-      sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranch').yieldsAsync(null, ctx.prs)
-      sinon.stub(GitHubBot.prototype, '_deleteComments').yieldsAsync(null)
+      sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranchAsync').resolves(ctx.prs)
+      sinon.stub(GitHubBot.prototype, '_deleteComments').resolves(null)
       done()
     })
 
     afterEach(function (done) {
       ctx.prs = null
       ctx.gitInfo = null
-      GitHub.prototype.listOpenPullRequestsForBranch.restore()
+      GitHub.prototype.listOpenPullRequestsForBranchAsync.restore()
       GitHubBot.prototype._deleteComments.restore()
       done()
     })
 
     it('should fail if listOpenPullRequestsForBranch failed', function (done) {
       const error = new Error('GitHub error')
-      GitHub.prototype.listOpenPullRequestsForBranch.yieldsAsync(error)
+      GitHub.prototype.listOpenPullRequestsForBranchAsync.rejects(error)
       const githubBot = new GitHubBot()
-      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+      githubBot.deleteBranchNotifications(ctx.gitInfo).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, error)
         done()
@@ -736,9 +730,9 @@ describe('GitHubBot', function () {
 
     it('should fail if _deleteComments failed', function (done) {
       const error = new Error('GitHub error')
-      GitHubBot.prototype._deleteComments.yieldsAsync(error)
+      GitHubBot.prototype._deleteComments.rejects(error)
       const githubBot = new GitHubBot()
-      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+      githubBot.deleteBranchNotifications(ctx.gitInfo).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, error)
         done()
@@ -747,10 +741,10 @@ describe('GitHubBot', function () {
 
     it('should call listOpenPullRequestsForBranch once', function (done) {
       const githubBot = new GitHubBot()
-      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+      githubBot.deleteBranchNotifications(ctx.gitInfo).asCallback(function (err) {
         assert.isNull(err)
-        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
-        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
+        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranchAsync)
+        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranchAsync,
           ctx.gitInfo.repo, ctx.gitInfo.branch)
         done()
       })
@@ -758,7 +752,7 @@ describe('GitHubBot', function () {
 
     it('should call _deleteComments twice', function (done) {
       const githubBot = new GitHubBot()
-      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+      githubBot.deleteBranchNotifications(ctx.gitInfo).asCallback(function (err) {
         assert.isNull(err)
         sinon.assert.calledTwice(GitHubBot.prototype._deleteComments)
         sinon.assert.calledWith(GitHubBot.prototype._deleteComments, {
@@ -777,9 +771,9 @@ describe('GitHubBot', function () {
 
     it('should call functions in order', function (done) {
       const githubBot = new GitHubBot()
-      githubBot.deleteBranchNotifications(ctx.gitInfo, function (err) {
+      githubBot.deleteBranchNotifications(ctx.gitInfo).asCallback(function (err) {
         assert.isNull(err)
-        sinon.assert.callOrder(GitHub.prototype.listOpenPullRequestsForBranch,
+        sinon.assert.callOrder(GitHub.prototype.listOpenPullRequestsForBranchAsync,
           GitHubBot.prototype._deleteComments)
         done()
       })
