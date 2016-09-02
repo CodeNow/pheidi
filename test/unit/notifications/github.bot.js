@@ -173,7 +173,7 @@ describe('GitHubBot', function () {
       }
       sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, [ctx.comment])
       sinon.stub(GitHub.prototype, 'addComment').yieldsAsync(null)
-      sinon.stub(GitHub.prototype, 'updateComment').yieldsAsync(null)
+      sinon.stub(GitHub.prototype, 'deleteComment').yieldsAsync(null)
       sinon.stub(tracker, 'get').returns(null)
       sinon.stub(tracker, 'set').returns(null)
       sinon.stub(tracker, 'del').returns(null)
@@ -183,7 +183,7 @@ describe('GitHubBot', function () {
     afterEach(function (done) {
       GitHub.prototype.findCommentsByUser.restore()
       GitHub.prototype.addComment.restore()
-      GitHub.prototype.updateComment.restore()
+      GitHub.prototype.deleteComment.restore()
       tracker.get.restore()
       tracker.set.restore()
       tracker.del.restore()
@@ -206,9 +206,9 @@ describe('GitHubBot', function () {
       })
     })
 
-    it('should fail if updateComment failed', function (done) {
+    it('should fail if deleteComment failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.updateComment.yieldsAsync(githubError)
+      GitHub.prototype.deleteComment.yieldsAsync(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -241,7 +241,7 @@ describe('GitHubBot', function () {
       })
     })
 
-    it('should call updateComment if comment found', function (done) {
+    it('should call deleteComment if comment found', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -254,7 +254,7 @@ describe('GitHubBot', function () {
       message += ' to [your environment](https://web.runnable.dev/codenow/inst-1)'
       message += '\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
-        assert.isNull(error)
+        assert.isUndefined(error)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
         sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
@@ -262,8 +262,8 @@ describe('GitHubBot', function () {
           gitInfo.number,
           process.env.RUNNABOT_GITHUB_USERNAME,
           sinon.match.func)
-        sinon.assert.calledOnce(GitHub.prototype.updateComment)
-        sinon.assert.calledWith(GitHub.prototype.updateComment,
+        sinon.assert.calledOnce(GitHub.prototype.deleteComment)
+        sinon.assert.calledWith(GitHub.prototype.deleteComment,
           gitInfo.repo,
           ctx.comment.id,
           message,
@@ -286,10 +286,10 @@ describe('GitHubBot', function () {
       message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
       message += '\n<sub>*From [Runnable](http://runnable.com)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
-        assert.isNull(error)
+        assert.isUndefined(error)
         sinon.assert.calledOnce(tracker.set)
         sinon.assert.calledWith(tracker.set, 'codenow/hellonode/2/inst-1-id', message)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
+        sinon.assert.calledTwice(GitHub.prototype.findCommentsByUser)
         sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
           gitInfo.repo,
           gitInfo.number,
@@ -306,9 +306,9 @@ describe('GitHubBot', function () {
       })
     })
 
-    it('should delete cache if updateComment failed', function (done) {
+    it('should delete cache if deleteComment failed', function (done) {
       const githubBot = new GitHubBot('anton-token')
-      GitHub.prototype.updateComment.yieldsAsync(new Error('GitHub error'))
+      GitHub.prototype.deleteComment.yieldsAsync(new Error('GitHub error'))
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
@@ -361,32 +361,7 @@ describe('GitHubBot', function () {
           gitInfo.number,
           process.env.RUNNABOT_GITHUB_USERNAME,
           sinon.match.func)
-        sinon.assert.notCalled(GitHub.prototype.updateComment)
-        done()
-      })
-    })
-
-    it('should not update comment if comment did not change', function (done) {
-      GitHub.prototype.findCommentsByUser.yieldsAsync(null, [{
-        body: '<!--instanceId:inst-1-id-->Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>',
-        id: 2
-      }])
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'running'
-      }
-      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
-        assert.isNull(error)
-        sinon.assert.calledOnce(GitHub.prototype.findCommentsByUser)
-        sinon.assert.calledWith(GitHub.prototype.findCommentsByUser,
-          gitInfo.repo,
-          gitInfo.number,
-          process.env.RUNNABOT_GITHUB_USERNAME,
-          sinon.match.func)
-        sinon.assert.notCalled(GitHub.prototype.updateComment)
+        sinon.assert.notCalled(GitHub.prototype.deleteComment)
         done()
       })
     })
