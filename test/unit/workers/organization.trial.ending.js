@@ -11,9 +11,9 @@ chai.use(require('chai-as-promised'))
 const assert = chai.assert
 const OrganizationService = require('services/organization-service')
 
-const NotifyTrialEnding = require('workers/organization.trial-ending').task
+const NotifyTrialEnding = require('workers/organization.trial.ending').task
 
-describe('organization.trial-ending', () => {
+describe('organization.trial.ending', () => {
   describe('Worker', () => {
     let validJob
     let emails
