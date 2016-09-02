@@ -22,22 +22,51 @@ describe('Utils', function () {
       done()
     })
 
-    it('should return running if build completed', function (done) {
+    it('should return running if build completed and container running', function (done) {
       const cv = {
         build: {
           failed: false,
           completed: new Date().getTime()
         }
       }
+      const container = {
+        inspect: {
+          State: {
+            Status: 'running'
+          }
+        }
+      }
       const state = utils.instanceState({
         contextVersions: [ cv ],
-        containers: [{}]
+        containers: [ container ]
       })
       assert.equal(state, 'running')
       done()
     })
 
     it('should return stopped if build completed but container exited', function (done) {
+      const cv = {
+        build: {
+          failed: false,
+          completed: new Date().getTime()
+        }
+      }
+      const container = {
+        inspect: {
+          State: {
+            Status: 'exited'
+          }
+        }
+      }
+      const state = utils.instanceState({
+        contextVersions: [ cv ],
+        containers: [ container ]
+      })
+      assert.equal(state, 'stopped')
+      done()
+    })
+
+    it('should return stopped if build completed but container errored', function (done) {
       const cv = {
         build: {
           failed: false,
