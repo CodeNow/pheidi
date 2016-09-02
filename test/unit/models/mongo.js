@@ -200,7 +200,6 @@ describe('Mongo Model', function () {
     it('should return the user emails', (done) => {
       client.getUserEmailsByGithubIds()
         .then((emails) => {
-          console.log(emails)
           assert.isArray(emails)
           assert.lengthOf(emails, 2)
           assert.include(emails, email1)
