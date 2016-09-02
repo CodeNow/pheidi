@@ -362,7 +362,7 @@ describe('GitHubBot', function () {
   })
   describe('#_upsertComments', function () {
     beforeEach(function (done) {
-      sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranch').yieldsAsync(null, [
+      sinon.stub(GitHub.prototype, 'listOpenPullRequestsForBranchAsync').resolves([
         {
           number: 1
         },
@@ -375,14 +375,14 @@ describe('GitHubBot', function () {
     })
 
     afterEach(function (done) {
-      GitHub.prototype.listOpenPullRequestsForBranch.restore()
+      GitHub.prototype.listOpenPullRequestsForBranchAsync.restore()
       GitHubBot.prototype._upsertComment.restore()
       done()
     })
 
     it('should fail if fetching prs failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.listOpenPullRequestsForBranch.yieldsAsync(githubError)
+      GitHub.prototype.listOpenPullRequestsForBranchAsync.rejects(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -390,7 +390,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      githubBot._upsertComments(gitInfo, ctx.instance, [], function (err) {
+      githubBot._upsertComments(gitInfo, ctx.instance, []).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -407,9 +407,9 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      githubBot._upsertComments(gitInfo, ctx.instance, [], function (err) {
+      githubBot._upsertComments(gitInfo, ctx.instance, []).asCallback(function (err) {
         assert.isDefined(err)
-        assert.equal(err, githubError)
+        assert.equal(err.message, githubError.message)
         done()
       })
     })
@@ -422,35 +422,32 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      githubBot._upsertComments(gitInfo, ctx.instance, [], function (err) {
+      githubBot._upsertComments(gitInfo, ctx.instance, []).asCallback(function (err) {
         assert.isNull(err)
-        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranch)
-        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranch,
+        sinon.assert.calledOnce(GitHub.prototype.listOpenPullRequestsForBranchAsync)
+        sinon.assert.calledWith(GitHub.prototype.listOpenPullRequestsForBranchAsync,
           gitInfo.repo,
-          gitInfo.branch,
-          sinon.match.func)
+          gitInfo.branch)
         sinon.assert.calledTwice(GitHubBot.prototype._upsertComment)
         const pushInfo1 = clone(gitInfo)
         pushInfo1.number = 1
         const pushInfo2 = clone(gitInfo)
         pushInfo2.number = 2
-        sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
-          pushInfo1, ctx.instance, [], sinon.match.func)
-        sinon.assert.calledWith(GitHubBot.prototype._upsertComment,
-          pushInfo2, ctx.instance, [], sinon.match.func)
+        sinon.assert.calledWith(GitHubBot.prototype._upsertComment, pushInfo1, ctx.instance, [])
+        sinon.assert.calledWith(GitHubBot.prototype._upsertComment, pushInfo2, ctx.instance, [])
         done()
       })
     })
   })
   describe('#notifyOnUpdate', function () {
     beforeEach(function (done) {
-      sinon.stub(GitHub.prototype, 'acceptInvitation').yieldsAsync(null)
-      sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
+      sinon.stub(GitHub.prototype, 'acceptInvitationAsync').resolves(null)
+      sinon.stub(GitHubBot.prototype, '_upsertComments').resolves(null)
       done()
     })
 
     afterEach(function (done) {
-      GitHub.prototype.acceptInvitation.restore()
+      GitHub.prototype.acceptInvitationAsync.restore()
       GitHubBot.prototype._upsertComments.restore()
       done()
     })
@@ -473,9 +470,9 @@ describe('GitHubBot', function () {
           number: 2,
           state: 'running'
         }
-        githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
+        githubBot.notifyOnUpdate(gitInfo, ctx.instance, []).asCallback(function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
+          sinon.assert.notCalled(GitHub.prototype.acceptInvitationAsync)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
           done()
         })
@@ -484,7 +481,7 @@ describe('GitHubBot', function () {
 
     it('should fail if accept invitation failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHub.prototype.acceptInvitation.yieldsAsync(githubError)
+      GitHub.prototype.acceptInvitationAsync.rejects(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -492,7 +489,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
+      githubBot.notifyOnUpdate(gitInfo, ctx.instance, []).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -501,7 +498,7 @@ describe('GitHubBot', function () {
 
     it('should fail if upserting comments failed', function (done) {
       const githubError = new Error('GitHub error')
-      GitHubBot.prototype._upsertComments.yieldsAsync(githubError)
+      GitHubBot.prototype._upsertComments.rejects(githubError)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
         repo: 'codenow/hellonode',
@@ -509,7 +506,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
+      githubBot.notifyOnUpdate(gitInfo, ctx.instance, []).asCallback(function (err) {
         assert.isDefined(err)
         assert.equal(err, githubError)
         done()
@@ -524,15 +521,12 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
+      githubBot.notifyOnUpdate(gitInfo, ctx.instance, []).asCallback(function (err) {
         assert.isNull(err)
-        sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
-        sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
-          ctx.instance.owner.username,
-          sinon.match.func)
+        sinon.assert.calledOnce(GitHub.prototype.acceptInvitationAsync)
+        sinon.assert.calledWith(GitHub.prototype.acceptInvitationAsync, ctx.instance.owner.username)
         sinon.assert.calledOnce(GitHubBot.prototype._upsertComments)
-        sinon.assert.calledWith(GitHubBot.prototype._upsertComments,
-          gitInfo, ctx.instance, [], sinon.match.func)
+        sinon.assert.calledWith(GitHubBot.prototype._upsertComments, gitInfo, ctx.instance, [])
         done()
       })
     })
