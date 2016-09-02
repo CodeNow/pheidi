@@ -41,6 +41,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "101": "^1.5.0",
+    "@runnable/big-poppa-client": "^0.4.0",
     "async": "^1.5.2",
     "bluebird": "^3.3.4",
     "bunyan": "^1.8.1",
