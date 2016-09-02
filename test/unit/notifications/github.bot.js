@@ -165,8 +165,10 @@ describe('GitHubBot', function () {
   })
   describe('#_upsertComment', function () {
     beforeEach(function (done) {
+      let commentText = '<!--instanceId:' + ctx.instance._id + '-->'
+      commentText += 'PR-2 is deployed to ' + ctx.instance.name
       ctx.comment = {
-        body: 'PR-2 is deployed to ' + ctx.instance.name,
+        body: commentText,
         id: 2
       }
       sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, [ctx.comment])
