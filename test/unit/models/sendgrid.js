@@ -11,14 +11,11 @@ const Promise = require('bluebird')
 const chai = require('chai')
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
+const emailCopy = require('models/sendgrid-email-copy')
 
 function thisShouldNotBeCalled () {
   throw new Error('This should not be called')
 }
-
-const DOCK_CREATED_MESSAGES = SendGridModel.DOCK_CREATED_MESSAGES
-const PAYMENT_METHOD_ADDED = SendGridModel.PAYMENT_METHOD_ADDED
-const PAYMENT_METHOD_REMOVED = SendGridModel.PAYMENT_METHOD_REMOVED
 
 describe('sendgrid', function () {
   var error
@@ -47,6 +44,23 @@ describe('sendgrid', function () {
   })
 
   describe('Methods', () => {
+    const organizationName = 'Runnable'
+    const emailsForAllMembersOfTOrganization = ['jorge.silva@thejsj.com']
+    const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
+
+    const stubOutSendBillingEmail = function () {
+      sinon.stub(sendgrid, 'sendBillingEmail').resolves()
+    }
+    const restoreSendBillingEmail = function () {
+      sendgrid.sendBillingEmail.resolves()
+    }
+    const stubOutSendEmail = function () {
+      sinon.stub(sendgrid, 'sendEmail').resolves()
+    }
+    const restoreSendEmail = function () {
+      sendgrid.sendEmail.resolves()
+    }
+
     beforeEach(function (done) {
       error = new Error('this is an error')
       rejectionPromise = Promise.reject(error)
@@ -149,18 +163,16 @@ describe('sendgrid', function () {
 
       describe('#dockCreated', function () {
         var org
-        beforeEach(function (done) {
+        beforeEach(function () {
           org = {
             login: 'Runnable',
             id: 12312231
           }
-          sinon.stub(sendgrid, 'sendEmail')
-          done()
         })
-        afterEach(function (done) {
-          sendgrid.sendEmail.restore()
-          done()
-        })
+
+        beforeEach(stubOutSendEmail)
+        afterEach(restoreSendEmail)
+
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.sendEmail.returns(Promise.resolve(true))
 
@@ -173,9 +185,9 @@ describe('sendgrid', function () {
               assert.equal(sendEmailOptions.subject, 'Your infrastructure is ready')
               assert.isString(sendEmailOptions.template)
               assert.isString(sendEmailOptions.body)
-              assert.equal(sendEmailOptions.body, DOCK_CREATED_MESSAGES.en.body)
+              assert.equal(sendEmailOptions.body, emailCopy.DOCK_CREATED_MESSAGES.en.body)
               assert.isString(sendEmailOptions.htmlBody)
-              assert.equal(sendEmailOptions.htmlBody, DOCK_CREATED_MESSAGES.en.htmlBody)
+              assert.equal(sendEmailOptions.htmlBody, emailCopy.DOCK_CREATED_MESSAGES.en.htmlBody)
               assert.isObject(sendEmailOptions.substitutions)
               assert.equal(sendEmailOptions.substitutions['%org%'], 'Runnable')
             })
@@ -183,35 +195,27 @@ describe('sendgrid', function () {
         })
       })
 
-      describe('#paymentMethodAddedOrRemoved', function () {
-        const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
+      describe('#sendBillingEmail', function () {
         const templateName = 'hello'
-        const organizationName = 'Runnable'
-        beforeEach(function (done) {
-          sinon.stub(sendgrid, 'sendEmail')
-          done()
-        })
-        afterEach(function (done) {
-          sendgrid.sendEmail.restore()
-          done()
-        })
+        beforeEach(stubOutSendEmail)
+        afterEach(restoreSendEmail)
+
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.sendEmail.returns(Promise.resolve(true))
 
-          sendgrid.paymentMethodAddedOrRemoved(organizationName, paymentMethodOwnerEmail, PAYMENT_METHOD_ADDED, templateName)
+          sendgrid.sendBillingEmail(organizationName, paymentMethodOwnerEmail, emailCopy.PAYMENT_METHOD_ADDED, templateName)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.sendEmail)
               var sendEmailOptions = sendgrid.sendEmail.args[0][0]
-              console.log(sendEmailOptions)
               assert.equal(sendEmailOptions.email, paymentMethodOwnerEmail)
               assert.equal(sendEmailOptions.fromname, 'Runnable Support')
-              assert.equal(sendEmailOptions.subject, 'Your payment method has been added')
+              assert.equal(sendEmailOptions.subject, emailCopy.PAYMENT_METHOD_ADDED.en.subject)
               assert.isString(sendEmailOptions.template)
               assert.equal(sendEmailOptions.template, templateName)
               assert.isString(sendEmailOptions.body)
-              assert.equal(sendEmailOptions.body, PAYMENT_METHOD_ADDED.en.body)
+              assert.equal(sendEmailOptions.body, emailCopy.PAYMENT_METHOD_ADDED.en.body)
               assert.isString(sendEmailOptions.htmlBody)
-              assert.equal(sendEmailOptions.htmlBody, PAYMENT_METHOD_ADDED.en.htmlBody)
+              assert.equal(sendEmailOptions.htmlBody, emailCopy.PAYMENT_METHOD_ADDED.en.htmlBody)
               assert.isObject(sendEmailOptions.substitutions)
               assert.equal(sendEmailOptions.substitutions['%organizationName%'], 'Runnable')
             })
@@ -220,24 +224,17 @@ describe('sendgrid', function () {
       })
 
       describe('#paymentMethodAdded', function () {
-        const organizationName = 'Runnable'
-        const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
-        beforeEach(function (done) {
-          sinon.stub(sendgrid, 'paymentMethodAddedOrRemoved').resolves()
-          done()
-        })
-        afterEach(function (done) {
-          sendgrid.paymentMethodAddedOrRemoved.restore()
-          done()
-        })
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.paymentMethodAdded(organizationName, paymentMethodOwnerEmail)
             .then(function () {
-              sinon.assert.calledOnce(sendgrid.paymentMethodAddedOrRemoved)
-              var paymentMethodAddedOrRemovedArgs = sendgrid.paymentMethodAddedOrRemoved.args[0]
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
               assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
               assert.equal(paymentMethodAddedOrRemovedArgs[1], paymentMethodOwnerEmail)
-              assert.equal(paymentMethodAddedOrRemovedArgs[2], PAYMENT_METHOD_ADDED)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.PAYMENT_METHOD_ADDED)
               assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_PAYMENT_METHOD_ADDED_TEMPLATE)
             })
             .asCallback(done)
@@ -245,25 +242,108 @@ describe('sendgrid', function () {
       })
 
       describe('#paymentMethodRemoved', function () {
-        const organizationName = 'Runnable'
-        const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
-        beforeEach(function (done) {
-          sinon.stub(sendgrid, 'paymentMethodAddedOrRemoved').resolves()
-          done()
-        })
-        afterEach(function (done) {
-          sendgrid.paymentMethodAddedOrRemoved.restore()
-          done()
-        })
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
         it('should attempt to send emails with the given arguments', function (done) {
           sendgrid.paymentMethodRemoved(organizationName, paymentMethodOwnerEmail)
             .then(function () {
-              sinon.assert.calledOnce(sendgrid.paymentMethodAddedOrRemoved)
-              var paymentMethodAddedOrRemovedArgs = sendgrid.paymentMethodAddedOrRemoved.args[0]
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
               assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
               assert.equal(paymentMethodAddedOrRemovedArgs[1], paymentMethodOwnerEmail)
-              assert.equal(paymentMethodAddedOrRemovedArgs[2], PAYMENT_METHOD_REMOVED)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.PAYMENT_METHOD_REMOVED)
               assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_PAYMENT_METHOD_REMOVED_TEMPLATE)
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#trialEnding', () => {
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.trialEnding(organizationName, emailsForAllMembersOfTOrganization)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
+              assert.equal(paymentMethodAddedOrRemovedArgs[1], emailsForAllMembersOfTOrganization)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.TRIAL_ENDING)
+              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_TRIAL_ENDING_TEMPLATE)
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#trialEnded', () => {
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.trialEnded(organizationName, emailsForAllMembersOfTOrganization)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
+              assert.equal(paymentMethodAddedOrRemovedArgs[1], emailsForAllMembersOfTOrganization)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.TRIAL_ENDED)
+              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_TRIAL_ENDED_TEMPLATE)
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#planChanged', () => {
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.planChanged(organizationName, emailsForAllMembersOfTOrganization)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
+              assert.equal(paymentMethodAddedOrRemovedArgs[1], emailsForAllMembersOfTOrganization)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.PLAN_CHANGED)
+              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_PLAN_CHANGED_TEMPLATE)
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#billingErrorToAdmin', () => {
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.billingErrorToAdmin(organizationName, emailsForAllMembersOfTOrganization)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
+              assert.equal(paymentMethodAddedOrRemovedArgs[1], emailsForAllMembersOfTOrganization)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.BILLING_ERROR_ADMIN)
+              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_BILLING_ERROR_ADMIN_TEMPLATE)
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#billingErrorToAllMembers', () => {
+        beforeEach(stubOutSendBillingEmail)
+        afterEach(restoreSendBillingEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.billingErrorToAllMembers(organizationName, emailsForAllMembersOfTOrganization)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendBillingEmail)
+              var paymentMethodAddedOrRemovedArgs = sendgrid.sendBillingEmail.args[0]
+              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
+              assert.equal(paymentMethodAddedOrRemovedArgs[1], emailsForAllMembersOfTOrganization)
+              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.BILLING_ERROR_ALL)
+              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_BILLING_ERROR_ALL_TEMPLATE)
             })
             .asCallback(done)
         })

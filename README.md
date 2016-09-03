@@ -40,3 +40,7 @@ Pheidi subscribed to:
     - If build container and status is failure mark commit in github as `failed`.
     - If user container and status is 0 mark commit in github as `success`
     - If user container and status is non 0 mark commit in github as `error`
+  7. `organization.trial.ended`
+    - If the trial for an organization has ended
+  8. `organization.trial.ending`
+    - If the trial for an organization is ending
