@@ -169,4 +169,65 @@ describe('Mongo Model', function () {
         .asCallback(done)
     })
   })
+
+  describe('#getUserEmailsByGithubIds', () => {
+    let client
+    let users
+    const email1 = 'jorge.silva@thejsj.com'
+    const email2 = 'jorge.silva.jetter@gmail.com'
+    const githubIds = [1981198, 897654]
+    beforeEach(() => {
+      users = [{ email: email1 }, { email: email2 }]
+      client = new MongoDB()
+      sinon.stub(MongoDB.prototype, 'findUsersAsync').resolves(users)
+    })
+    afterEach(() => {
+      MongoDB.prototype.findUsersAsync.restore()
+    })
+
+    it('should call `findUsersAsync`', (done) => {
+      client.getUserEmailsByGithubIds(githubIds)
+        .then(() => {
+          sinon.assert.calledOnce(MongoDB.prototype.findUsersAsync)
+          sinon.assert.calledWithExactly(
+            MongoDB.prototype.findUsersAsync,
+            { 'accounts.github.id': { $in: githubIds } }
+          )
+        })
+        .asCallback(done)
+    })
+
+    it('should return the user emails', (done) => {
+      client.getUserEmailsByGithubIds()
+        .then((emails) => {
+          assert.isArray(emails)
+          assert.lengthOf(emails, 2)
+          assert.include(emails, email1)
+          assert.include(emails, email2)
+        })
+        .asCallback(done)
+    })
+
+    it('should return an empty array if no users are found', (done) => {
+      MongoDB.prototype.findUsersAsync.resolves([])
+
+      client.getUserEmailsByGithubIds()
+        .then((emails) => {
+          assert.isArray(emails)
+          assert.lengthOf(emails, 0)
+        })
+        .asCallback(done)
+    })
+
+    it('should return an empty array if users have no emails', (done) => {
+      MongoDB.prototype.findUsersAsync.resolves([{}, {}, {}])
+
+      client.getUserEmailsByGithubIds()
+        .then((emails) => {
+          assert.isArray(emails)
+          assert.lengthOf(emails, 0)
+        })
+        .asCallback(done)
+    })
+  })
 })
