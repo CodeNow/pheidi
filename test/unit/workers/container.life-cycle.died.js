@@ -68,6 +68,14 @@ describe('Container life-cycle died', () => {
       done()
     })
 
+    it('should do nothing if no inspectData', (done) => {
+      Worker({ id: 'fakeId' }).asCallback((err) => {
+        assert.isNull(err)
+        sinon.assert.notCalled(Mongo.prototype.findInstancesAsync)
+        done()
+      })
+    })
+
     it('should fail if no instance is found', (done) => {
       Mongo.prototype.findInstancesAsync.resolves([])
       Worker(mockParams).asCallback((err) => {
