@@ -54,8 +54,6 @@ describe('Container life-cycle started', () => {
 
     beforeEach((done) => {
       sinon.stub(Promise.prototype, 'delay').resolves()
-      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
-      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
       sinon.stub(Mongo.prototype, 'findInstancesAsync').resolves([mockInstance])
       sinon.stub(Mongo.prototype, 'findOneContextVersionAsync').resolves(mockCv)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
@@ -64,8 +62,6 @@ describe('Container life-cycle started', () => {
 
     afterEach((done) => {
       Promise.prototype.delay.restore()
-      Mongo.prototype.connect.restore()
-      Mongo.prototype.close.restore()
       Mongo.prototype.findInstancesAsync.restore()
       Mongo.prototype.findOneContextVersionAsync.restore()
       GitHubStatus.prototype.setStatus.restore()

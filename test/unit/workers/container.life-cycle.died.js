@@ -55,8 +55,6 @@ describe('Container life-cycle died', () => {
     }
 
     beforeEach((done) => {
-      sinon.stub(Mongo.prototype, 'connect').yieldsAsync()
-      sinon.stub(Mongo.prototype, 'close').yieldsAsync()
       sinon.stub(Mongo.prototype, 'findInstancesAsync').resolves([mockInstance])
       sinon.stub(JobModule, 'calculateStatus').returns(mockStatus)
       sinon.stub(GitHubStatus.prototype, 'setStatus').resolves(mockGithubStatusResponse)
@@ -64,8 +62,6 @@ describe('Container life-cycle died', () => {
     })
 
     afterEach((done) => {
-      Mongo.prototype.connect.restore()
-      Mongo.prototype.close.restore()
       Mongo.prototype.findInstancesAsync.restore()
       JobModule.calculateStatus.restore()
       GitHubStatus.prototype.setStatus.restore()
