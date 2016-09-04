@@ -593,7 +593,7 @@ describe('GitHubBot', function () {
       message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
       message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
       message += '\n<sub>Related containers: '
-      message += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9"> [inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
+      message += '[inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
       assert.equal(md, message)
       done()
     })
@@ -634,9 +634,9 @@ describe('GitHubBot', function () {
         }
       ]
       const md = githubBot._renderIsolatedInstance(insts)
-      let expectedMd = '<sub>Related containers: <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" '
-      expectedMd += 'title="Failed" width="9" height="9"> [inst-1](https://web.runnable.dev/codenow/inst-1) '
-      expectedMd += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9"> [inst-2](https://web.runnable.dev/codenow/inst-2)'
+      let expectedMd = '<sub>Related containers: '
+      expectedMd += '[inst-1](https://web.runnable.dev/codenow/inst-1), '
+      expectedMd += '[inst-2](https://web.runnable.dev/codenow/inst-2)'
       assert.equal(md, expectedMd)
       done()
     })
