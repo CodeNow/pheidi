@@ -635,7 +635,7 @@ describe('GitHubBot', function () {
       ]
       const md = githubBot._renderIsolatedInstance(insts)
       let expectedMd = '<sub>Related containers: '
-      expectedMd += '[inst-1](https://web.runnable.dev/codenow/inst-1) '
+      expectedMd += '[inst-1](https://web.runnable.dev/codenow/inst-1), '
       expectedMd += '[inst-2](https://web.runnable.dev/codenow/inst-2)'
       assert.equal(md, expectedMd)
       done()
