@@ -3,8 +3,12 @@
 const chai = require('chai')
 chai.use(require('chai-as-promised'))
 const assert = chai.assert
+const bigPoppa = require('models/big-poppa')
 const clone = require('101/clone')
 const sinon = require('sinon')
+const Promise = require('bluebird')
+require('sinon-as-promised')(Promise)
+const rabbitmq = require('rabbitmq')
 const GitHubBot = require('notifications/github.bot')
 const GitHub = require('models/github')
 const tracker = require('models/tracker')
@@ -471,16 +475,87 @@ describe('GitHubBot', function () {
       })
     })
   })
-  describe('#notifyOnUpdate', function () {
+
+  describe('#checkRunnabotEnabledAndAcceptInvite', function () {
+    let org
     beforeEach(function (done) {
-      sinon.stub(GitHub.prototype, 'acceptInvitation').yieldsAsync(null)
-      sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
+      org = {
+        id: 23,
+        name: 'Hello',
+        lowerName: 'hello',
+        runnabotEnabled: false
+      }
+      sinon.stub(GitHub.prototype, 'acceptInvitationAsync').resolves(null)
+      sinon.stub(bigPoppa, 'getOrganizations').resolves([org])
+      sinon.stub(rabbitmq, 'publishRunnabotEnabled').resolves()
       done()
     })
 
     afterEach(function (done) {
-      GitHub.prototype.acceptInvitation.restore()
+      GitHub.prototype.acceptInvitationAsync.restore()
+      bigPoppa.getOrganizations.restore()
+      rabbitmq.publishRunnabotEnabled.restore()
+      done()
+    })
+
+    it('should fail if accept invitation failed', function (done) {
+      const githubError = new Error('GitHub error')
+      GitHub.prototype.acceptInvitationAsync.rejects(githubError)
+      const githubBot = new GitHubBot('anton-token')
+      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+        .asCallback((err) => {
+          assert.isDefined(err)
+          assert.equal(err, githubError)
+          done()
+        })
+    })
+    it('should fail if getOrganizations failed', function (done) {
+      const bigPoppaError = new Error('BigPoppa error')
+      bigPoppa.getOrganizations.rejects(bigPoppaError)
+      const githubBot = new GitHubBot('anton-token')
+      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+        .asCallback((err) => {
+          assert.isDefined(err)
+          assert.equal(err, bigPoppaError)
+          done()
+        })
+    })
+
+    it('should skip checking github if runnabotEnabled returns true', function (done) {
+      org.runnabotEnabled = true
+      const githubBot = new GitHubBot('anton-token')
+      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+        .asCallback((err) => {
+          assert.isNull(err)
+          sinon.assert.notCalled(GitHub.prototype.acceptInvitationAsync)
+          sinon.assert.notCalled(rabbitmq.publishRunnabotEnabled)
+          done()
+        })
+    })
+
+    it('should check github, then create the job if runnabotEnabled is false', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+        .asCallback((err) => {
+          assert.isNull(err)
+          sinon.assert.calledOnce(GitHub.prototype.acceptInvitationAsync)
+          sinon.assert.calledWith(GitHub.prototype.acceptInvitationAsync, org.name)
+          sinon.assert.calledOnce(rabbitmq.publishRunnabotEnabled)
+          sinon.assert.calledWith(rabbitmq.publishRunnabotEnabled, { organizationId: org.id })
+          done()
+        })
+    })
+  })
+  describe('#notifyOnUpdate', function () {
+    beforeEach(function (done) {
+      sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
+      sinon.stub(GitHubBot.prototype, 'checkRunnabotEnabledAndAcceptInvite').resolves()
+      done()
+    })
+
+    afterEach(function (done) {
       GitHubBot.prototype._upsertComments.restore()
+      GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite.restore()
       done()
     })
 
@@ -504,27 +579,10 @@ describe('GitHubBot', function () {
         }
         githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHub.prototype.acceptInvitation)
+          sinon.assert.notCalled(GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
           done()
         })
-      })
-    })
-
-    it('should fail if accept invitation failed', function (done) {
-      const githubError = new Error('GitHub error')
-      GitHub.prototype.acceptInvitation.yieldsAsync(githubError)
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'running'
-      }
-      githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
-        assert.isDefined(err)
-        assert.equal(err, githubError)
-        done()
       })
     })
 
@@ -540,7 +598,7 @@ describe('GitHubBot', function () {
       }
       githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
         assert.isDefined(err)
-        assert.equal(err, githubError)
+        assert.equal(err.cause, githubError)
         done()
       })
     })
@@ -555,10 +613,9 @@ describe('GitHubBot', function () {
       }
       githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
         assert.isNull(err)
-        sinon.assert.calledOnce(GitHub.prototype.acceptInvitation)
-        sinon.assert.calledWith(GitHub.prototype.acceptInvitation,
-          ctx.instance.owner.username,
-          sinon.match.func)
+        sinon.assert.calledOnce(GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite)
+        sinon.assert.calledWith(GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite,
+          ctx.instance.owner.username)
         sinon.assert.calledOnce(GitHubBot.prototype._upsertComments)
         sinon.assert.calledWith(GitHubBot.prototype._upsertComments,
           gitInfo, ctx.instance, [], sinon.match.func)
