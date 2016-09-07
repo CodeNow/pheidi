@@ -476,25 +476,25 @@ describe('GitHubBot', function () {
     })
   })
 
-  describe('#checkRunnabotEnabledAndAcceptInvite', function () {
+  describe('#checkPrBotEnabledAndAcceptInvite', function () {
     let org
     beforeEach(function (done) {
       org = {
         id: 23,
         name: 'Hello',
         lowerName: 'hello',
-        runnabotEnabled: false
+        prBotEnabled: false
       }
       sinon.stub(GitHub.prototype, 'acceptInvitationAsync').resolves(null)
       sinon.stub(bigPoppa, 'getOrganizations').resolves([org])
-      sinon.stub(rabbitmq, 'publishRunnabotEnabled').resolves()
+      sinon.stub(rabbitmq, 'publishPrBotEnabled').resolves()
       done()
     })
 
     afterEach(function (done) {
       GitHub.prototype.acceptInvitationAsync.restore()
       bigPoppa.getOrganizations.restore()
-      rabbitmq.publishRunnabotEnabled.restore()
+      rabbitmq.publishPrBotEnabled.restore()
       done()
     })
 
@@ -502,7 +502,7 @@ describe('GitHubBot', function () {
       const githubError = new Error('GitHub error')
       GitHub.prototype.acceptInvitationAsync.rejects(githubError)
       const githubBot = new GitHubBot('anton-token')
-      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+      githubBot.checkPrBotEnabledAndAcceptInvite(org.name)
         .asCallback((err) => {
           assert.isDefined(err)
           assert.equal(err, githubError)
@@ -513,7 +513,7 @@ describe('GitHubBot', function () {
       const bigPoppaError = new Error('BigPoppa error')
       bigPoppa.getOrganizations.rejects(bigPoppaError)
       const githubBot = new GitHubBot('anton-token')
-      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+      githubBot.checkPrBotEnabledAndAcceptInvite(org.name)
         .asCallback((err) => {
           assert.isDefined(err)
           assert.equal(err, bigPoppaError)
@@ -521,27 +521,27 @@ describe('GitHubBot', function () {
         })
     })
 
-    it('should skip checking github if runnabotEnabled returns true', function (done) {
-      org.runnabotEnabled = true
+    it('should skip checking github if prBotEnabled returns true', function (done) {
+      org.prBotEnabled = true
       const githubBot = new GitHubBot('anton-token')
-      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+      githubBot.checkPrBotEnabledAndAcceptInvite(org.name)
         .asCallback((err) => {
           assert.isNull(err)
           sinon.assert.notCalled(GitHub.prototype.acceptInvitationAsync)
-          sinon.assert.notCalled(rabbitmq.publishRunnabotEnabled)
+          sinon.assert.notCalled(rabbitmq.publishPrBotEnabled)
           done()
         })
     })
 
-    it('should check github, then create the job if runnabotEnabled is false', function (done) {
+    it('should check github, then create the job if prBotEnabled is false', function (done) {
       const githubBot = new GitHubBot('anton-token')
-      githubBot.checkRunnabotEnabledAndAcceptInvite(org.name)
+      githubBot.checkPrBotEnabledAndAcceptInvite(org.name)
         .asCallback((err) => {
           assert.isNull(err)
           sinon.assert.calledOnce(GitHub.prototype.acceptInvitationAsync)
           sinon.assert.calledWith(GitHub.prototype.acceptInvitationAsync, org.name)
-          sinon.assert.calledOnce(rabbitmq.publishRunnabotEnabled)
-          sinon.assert.calledWith(rabbitmq.publishRunnabotEnabled, { organizationId: org.id })
+          sinon.assert.calledOnce(rabbitmq.publishPrBotEnabled)
+          sinon.assert.calledWith(rabbitmq.publishPrBotEnabled, { organizationId: org.id })
           done()
         })
     })
@@ -549,13 +549,13 @@ describe('GitHubBot', function () {
   describe('#notifyOnUpdate', function () {
     beforeEach(function (done) {
       sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
-      sinon.stub(GitHubBot.prototype, 'checkRunnabotEnabledAndAcceptInvite').resolves()
+      sinon.stub(GitHubBot.prototype, 'checkPrBotEnabledAndAcceptInvite').resolves()
       done()
     })
 
     afterEach(function (done) {
       GitHubBot.prototype._upsertComments.restore()
-      GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite.restore()
+      GitHubBot.prototype.checkPrBotEnabledAndAcceptInvite.restore()
       done()
     })
 
@@ -579,7 +579,7 @@ describe('GitHubBot', function () {
         }
         githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
           assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite)
+          sinon.assert.notCalled(GitHubBot.prototype.checkPrBotEnabledAndAcceptInvite)
           sinon.assert.notCalled(GitHubBot.prototype._upsertComments)
           done()
         })
@@ -613,8 +613,8 @@ describe('GitHubBot', function () {
       }
       githubBot.notifyOnUpdate(gitInfo, ctx.instance, [], function (err) {
         assert.isNull(err)
-        sinon.assert.calledOnce(GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite)
-        sinon.assert.calledWith(GitHubBot.prototype.checkRunnabotEnabledAndAcceptInvite,
+        sinon.assert.calledOnce(GitHubBot.prototype.checkPrBotEnabledAndAcceptInvite)
+        sinon.assert.calledWith(GitHubBot.prototype.checkPrBotEnabledAndAcceptInvite,
           ctx.instance.owner.username)
         sinon.assert.calledOnce(GitHubBot.prototype._upsertComments)
         sinon.assert.calledWith(GitHubBot.prototype._upsertComments,
