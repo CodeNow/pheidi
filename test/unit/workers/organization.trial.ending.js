@@ -88,5 +88,17 @@ describe('organization.trial.ending', () => {
           done()
         })
     })
+
+    it('should throw a `WorkerStopError` if there are no email addresses found for org', (done) => {
+      OrganizationService.getAllUserEmailsForOrganization.resolves([])
+
+      NotifyTrialEnding(validJob)
+        .asCallback((err) => {
+          assert.isOk(err)
+          assert.instanceOf(err, WorkerStopError)
+          assert.match(err.message, /no.*email.*address/i)
+          done()
+        })
+    })
   })
 })
