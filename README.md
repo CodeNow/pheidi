@@ -9,6 +9,11 @@ Pheidi stands for [Pheidippides](https://en.wikipedia.org/wiki/Pheidippides) -
 messenger who died after running Marathon to deliver message about Greek victory over Persians.
 
 
+## Testing
+
+**If you testing runnabot in staging you need to use @runnabot-brother github account and not @runnabot.**
+
+
 ## Mission
 
 Pheidi is a Ponos worker-sever responsible for sending all kind of notifications from Runnable to 3d party systems.
