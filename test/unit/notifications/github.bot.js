@@ -541,7 +541,7 @@ describe('GitHubBot', function () {
           sinon.assert.calledOnce(GitHub.prototype.acceptInvitationAsync)
           sinon.assert.calledWith(GitHub.prototype.acceptInvitationAsync, org.name)
           sinon.assert.calledOnce(rabbitmq.publishPrBotEnabled)
-          sinon.assert.calledWith(rabbitmq.publishPrBotEnabled, { organizationId: org.id })
+          sinon.assert.calledWith(rabbitmq.publishPrBotEnabled, { organization: { id: org.id } })
           done()
         })
     })
