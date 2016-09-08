@@ -790,5 +790,4 @@ describe('GitHubBot', function () {
       })
     })
   })
-
 })
