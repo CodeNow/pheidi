@@ -25,7 +25,7 @@ describe('GitHubBotMessage', function () {
         state: 'running'
       }
       const md = GitHubBotMessage.render(gitInfo, ctx.instance)
-      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>')
+      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com). [View on Runnable](https://web.runnable.dev/codenow/inst-1).\n<sub>*From [Runnable](http://runnable.com)*</sub>')
       done()
     })
 
@@ -38,8 +38,8 @@ describe('GitHubBotMessage', function () {
       }
       const md = GitHubBotMessage.render(gitInfo, ctx.instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
       let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
-      message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
-      message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
+      message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com). '
+      message += '[View on Runnable](https://web.runnable.dev/codenow/inst-1).'
       message += '\n<sub>Related containers: '
       message += '[inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
       assert.equal(md, message)
