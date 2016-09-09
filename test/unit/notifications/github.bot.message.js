@@ -5,7 +5,7 @@ chai.use(require('chai-as-promised'))
 const assert = chai.assert
 const GitHubBotMessage = require('notifications/github.bot.message')
 
-describe('GitHubBotMessage', function () {
+describe('GitHubBotMessage', () => {
   const ctx = {}
   ctx.instance = {
     _id: 'inst-1-id',
@@ -16,8 +16,8 @@ describe('GitHubBotMessage', function () {
     shortHash: 'ga71a12',
     masterPod: true
   }
-  describe('#_render', function () {
-    it('should return correct message for the running single instance', function (done) {
+  describe('#_render', () => {
+    it('should return correct message for the running single instance', (done) => {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
@@ -29,7 +29,7 @@ describe('GitHubBotMessage', function () {
       done()
     })
 
-    it('should return correct message for the isolated group', function (done) {
+    it('should return correct message for the isolated group', (done) => {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
@@ -47,26 +47,26 @@ describe('GitHubBotMessage', function () {
     })
   })
 
-  describe('#_renderIsolatedInstance', function () {
-    it('should return empty string if null was passed', function (done) {
+  describe('#_renderIsolatedInstance', () => {
+    it('should return empty string if null was passed', (done) => {
       const md = GitHubBotMessage.renderIsolatedInstance(null)
       assert.equal(md, '')
       done()
     })
 
-    it('should return empty string if empty string was passed', function (done) {
+    it('should return empty string if empty string was passed', (done) => {
       const md = GitHubBotMessage.renderIsolatedInstance('')
       assert.equal(md, '')
       done()
     })
 
-    it('should return empty string if empty array was passed', function (done) {
+    it('should return empty string if empty array was passed', (done) => {
       const md = GitHubBotMessage.renderIsolatedInstance([])
       assert.equal(md, '')
       done()
     })
 
-    it('should return md with two items if array has two elements', function (done) {
+    it('should return md with two items if array has two elements', (done) => {
       const insts = [
         {
           name: 'inst-1',
