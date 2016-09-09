@@ -3,7 +3,7 @@
 const chai = require('chai')
 const GitHub = require('models/github')
 const GithubStatus = require('notifications/github.status')
-const mongodbHelper = require('mongo-helper')
+const Mongo = require('models/mongo')
 const sinon = require('sinon')
 
 chai.use(require('chai-as-promised'))
@@ -15,7 +15,6 @@ describe('github.status', () => {
     let mockInstance
     let mockMainACV
     let mockState
-    let mongoHelperStubs
     let mockUser
     let mockMessage
 
@@ -44,15 +43,12 @@ describe('github.status', () => {
         commit: 'commitsha'
       }
       mockState = 'success'
-      mongoHelperStubs = {
-        findOneUserAsync: sinon.stub().resolves(mockUser)
-      }
-      sinon.stub(mongodbHelper, 'helper').returns(mongoHelperStubs)
+      sinon.stub(Mongo.prototype, 'findOneUserAsync').resolves(mockUser)
       sinon.stub(GitHub.prototype, 'createStatus').resolves()
     })
 
     afterEach(() => {
-      mongodbHelper.helper.restore()
+      Mongo.prototype.findOneUserAsync.restore()
       GitHub.prototype.createStatus.restore()
     })
 
@@ -68,7 +64,7 @@ describe('github.status', () => {
     })
 
     it('should fail if no user found', function (done) {
-      mongoHelperStubs.findOneUserAsync.resolves()
+      Mongo.prototype.findOneUserAsync.resolves()
       githubStatus.setStatus(mockInstance, mockMainACV, mockState)
         .asCallback((err) => {
           assert.isDefined(err)
@@ -80,7 +76,7 @@ describe('github.status', () => {
 
     it('should fail if user doesnt have an access token', function (done) {
       mockUser.accounts = {}
-      mongoHelperStubs.findOneUserAsync.resolves(mockUser)
+      Mongo.prototype.findOneUserAsync.resolves(mockUser)
       githubStatus.setStatus(mockInstance, mockMainACV, mockState)
         .asCallback((err) => {
           assert.isDefined(err)
