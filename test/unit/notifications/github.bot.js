@@ -25,7 +25,7 @@ describe('GitHubBot', function () {
     masterPod: true
   }
 
-  describe('#_getGitHubToken', function () {
+  describe('#getToken', function () {
     beforeEach(function (done) {
       ctx.originalGitHubTokens = process.env.RUNNABOT_GITHUB_ACCESS_TOKENS
       done()
@@ -37,25 +37,25 @@ describe('GitHubBot', function () {
 
     it('should throw if access tokens are not defined', function (done) {
       delete process.env.RUNNABOT_GITHUB_ACCESS_TOKENS
-      assert.throws(GitHubBot._getGitHubToken, 'Configuration error: runnabot gh access token is not defined')
+      assert.throws(GitHubBot.getToken, 'Configuration error: runnabot gh access token is not defined')
       done()
     })
 
     it('should throw if access tokens is not string', function (done) {
       process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = 1
-      assert.throws(GitHubBot._getGitHubToken, 'Configuration error: runnabot gh access token is not defined')
+      assert.throws(GitHubBot.getToken, 'Configuration error: runnabot gh access token is not defined')
       done()
     })
 
     it('should return empty token if tokens are empty', function (done) {
       process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = ''
-      assert.equal(GitHubBot._getGitHubToken(), '')
+      assert.equal(GitHubBot.getToken(), '')
       done()
     })
 
     it('should return 1 element if one token defined', function (done) {
       process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = 'token1'
-      assert.equal(GitHubBot._getGitHubToken(), 'token1')
+      assert.equal(GitHubBot.getToken(), 'token1')
       done()
     })
 
@@ -67,7 +67,7 @@ describe('GitHubBot', function () {
         'token4'
       ]
       process.env.RUNNABOT_GITHUB_ACCESS_TOKENS = tokens.join(',')
-      assert.include(tokens, GitHubBot._getGitHubToken())
+      assert.include(tokens, GitHubBot.getToken())
       done()
     })
   })
@@ -623,81 +623,6 @@ describe('GitHubBot', function () {
       })
     })
   })
-  describe('#_render', function () {
-    it('should return correct message for the running single instance', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'running'
-      }
-      const md = githubBot._render(gitInfo, ctx.instance)
-      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>')
-      done()
-    })
-
-    it('should return correct message for the isolated group', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const gitInfo = {
-        repo: 'codenow/hellonode',
-        branch: 'feature-1',
-        number: 2,
-        state: 'running'
-      }
-      const md = githubBot._render(gitInfo, ctx.instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
-      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
-      message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
-      message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
-      message += '\n<sub>Related containers: '
-      message += '[inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
-      assert.equal(md, message)
-      done()
-    })
-  })
-
-  describe('#_renderIsolatedInstance', function () {
-    it('should return empty string if null was passed', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const md = githubBot._renderIsolatedInstance(null)
-      assert.equal(md, '')
-      done()
-    })
-
-    it('should return empty string if empty string was passed', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const md = githubBot._renderIsolatedInstance('')
-      assert.equal(md, '')
-      done()
-    })
-
-    it('should return empty string if empty array was passed', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const md = githubBot._renderIsolatedInstance([])
-      assert.equal(md, '')
-      done()
-    })
-
-    it('should return md with two items if array has two elements', function (done) {
-      const githubBot = new GitHubBot('anton-token')
-      const insts = [
-        {
-          name: 'inst-1',
-          owner: { username: 'codenow' }
-        },
-        {
-          name: 'inst-2',
-          owner: { username: 'codenow' }
-        }
-      ]
-      const md = githubBot._renderIsolatedInstance(insts)
-      let expectedMd = '<sub>Related containers: '
-      expectedMd += '[inst-1](https://web.runnable.dev/codenow/inst-1), '
-      expectedMd += '[inst-2](https://web.runnable.dev/codenow/inst-2)'
-      assert.equal(md, expectedMd)
-      done()
-    })
-  })
 
   describe('#deleteAllNotifications', function () {
     beforeEach(function (done) {
@@ -863,39 +788,6 @@ describe('GitHubBot', function () {
           GitHubBot.prototype._deleteComments)
         done()
       })
-    })
-  })
-  describe('_renderStatusIcon', () => {
-    it('should return correct icon for running state', () => {
-      const githubBot = new GitHubBot()
-      assert.equal(
-        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9">',
-        githubBot._renderStatusIcon('running')
-      )
-    })
-
-    it('should return correct icon for stopped state', () => {
-      const githubBot = new GitHubBot()
-      assert.equal(
-        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-gray.svg" title="Stopped" width="9" height="9">',
-        githubBot._renderStatusIcon('stopped')
-      )
-    })
-
-    it('should return correct icon for building state', () => {
-      const githubBot = new GitHubBot()
-      assert.equal(
-        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-orange.svg" title="Building" width="9" height="9">',
-        githubBot._renderStatusIcon('building')
-      )
-    })
-
-    it('should return errored icon as default', () => {
-      const githubBot = new GitHubBot()
-      assert.equal(
-        '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" title="Failed" width="9" height="9">',
-        githubBot._renderStatusIcon('error')
-      )
     })
   })
 })
