@@ -71,77 +71,139 @@ describe('sendgrid', function () {
     describe('testing all successfull functionality', function () {
       beforeEach(function (done) {
         sendgrid = new SendGridModel()
-        sinon.stub(sendgrid._sendgrid, 'sendAsync')
+        sinon.stub(sendgrid._sendgrid, 'API')
         done()
       })
       afterEach(function (done) {
-        sendgrid._sendgrid.sendAsync.restore()
+        sendgrid._sendgrid.API.restore()
         done()
       })
 
       describe('#sendEmail', function () {
-        describe('success', function () {
+        describe('Success', function () {
+          let emailOpts
+          const email1 = 'jorge.silva.jetter@gmail.com'
+          const email2 = 'jorge@runnable.com'
           beforeEach(function (done) {
-            sendgrid._sendgrid.sendAsync.returns(successPromise)
-            done()
-          })
-          it('should send emails with the given arguments', function (done) {
-            var emailOpts = {
+            sendgrid._sendgrid.API.returns(successPromise)
+            emailOpts = {
               email: 'hello',
               subject: 'asdasdasd',
               body: '11212312313',
               htmlBody: 'asdfasdfadsfadsf'
             }
-
+            done()
+          })
+          it('should send emails with `from` and `subject`', function (done) {
             sendgrid.sendEmail(emailOpts)
               .then(function () {
-                sinon.assert.calledOnce(sendgrid._sendgrid.sendAsync)
-                var emailObject = sendgrid._sendgrid.sendAsync.args[0][0]
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const body = request.body
 
-                assert.equal(emailObject.to, emailOpts.email)
-                assert.equal(emailObject.subject, emailOpts.subject)
-                assert.equal(emailObject.text, emailOpts.body)
-                assert.equal(emailObject.html, emailOpts.htmlBody)
+                const toEmail = request.body.personalizations[0].to
+                assert.equal(toEmail[0].email, emailOpts.email)
+                assert.equal(body.subject, emailOpts.subject)
               })
               .asCallback(done)
           })
 
-          it('should send an email with substitutions and a template', function (done) {
-            var emailOpts = {
-              email: 'hello',
-              subject: 'asdasdasd',
-              body: '11212312313',
-              htmlBody: 'asdfasdfadsfadsf',
-              substitutions: {
-                'hello': 'chickenbutt'
-              },
-              template: 'asdasdasd'
-            }
-
+          it('should handle sending emails to a single address', function (done) {
             sendgrid.sendEmail(emailOpts)
               .then(function () {
-                sinon.assert.calledOnce(sendgrid._sendgrid.sendAsync)
-                var emailObject = sendgrid._sendgrid.sendAsync.args[0][0]
-                assert.equal(emailObject.to, emailOpts.email)
-                assert.equal(emailObject.subject, emailOpts.subject)
-                assert.equal(emailObject.text, emailOpts.body)
-                assert.equal(emailObject.html, emailOpts.htmlBody)
-                assert.deepEqual(emailObject.smtpapi.header.sub.hello, [emailOpts.substitutions.hello])
-                assert.deepEqual(emailObject.smtpapi.header.filters, {
-                  'templates': {
-                    'settings': {
-                      'enable': 1,
-                      'template_id': emailOpts.template
-                    }
-                  }
-                })
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const toEmail = request.body.personalizations[0].to
+                assert.equal(toEmail[0].email, emailOpts.email)
+              })
+              .asCallback(done)
+          })
+
+          it('should handle sending emails to multiple addresses', function (done) {
+            emailOpts.email = [email1, email2]
+            sendgrid.sendEmail(emailOpts)
+              .then(function () {
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const personalizations = request.body.personalizations
+
+                const toEmail1 = personalizations.find((p) => p.to[0].email === email1)
+                assert.isOk(toEmail1)
+                const toEmail2 = personalizations.find((p) => p.to[0].email === email2)
+                assert.isOk(toEmail2)
+              })
+              .asCallback(done)
+          })
+
+          it('should handle sending both plain and html emails', function (done) {
+            sendgrid.sendEmail(emailOpts)
+              .then(function () {
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const body = request.body
+
+                assert.isArray(body.content)
+                assert.lengthOf(body.content, 2)
+                const plainContent = body.content.find((x) => x.type.match(/plain/i))
+                assert.equal(plainContent.value, emailOpts.body)
+                const htmlContent = body.content.find((x) => x.type.match(/html/i))
+                assert.equal(htmlContent.value, emailOpts.htmlBody)
+              })
+              .asCallback(done)
+          })
+
+          it('should send emails with templtates', function (done) {
+            emailOpts.template = 'hello'
+            sendgrid.sendEmail(emailOpts)
+              .then(function () {
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const body = request.body
+                assert.equal(body.template_id, 'hello')
+              })
+              .asCallback(done)
+          })
+
+          it('should send add substitutions to a single personalizaiton if there is only 1 receipient', function (done) {
+            emailOpts.substitutions = {
+              '%organizationName%': 'helloWorld'
+            }
+            sendgrid.sendEmail(emailOpts)
+              .then(function () {
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const personalizations = request.body.personalizations
+
+                const toEmail = personalizations.find((p) => p.to[0].email === emailOpts.email)
+                assert.equal(toEmail.substitutions['%organizationName%'], 'helloWorld')
+              })
+              .asCallback(done)
+          })
+
+          it('should send add substitutions to a multiple personalizations if there are multiple recepients', function (done) {
+            emailOpts.email = [email1, email2]
+            emailOpts.substitutions = {
+              '%organizationName%': 'helloWorld'
+            }
+            sendgrid.sendEmail(emailOpts)
+              .then(function () {
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
+                const request = sendgrid._sendgrid.API.args[0][0]
+                const personalizations = request.body.personalizations
+
+                const toEmail1 = personalizations.find((p) => p.to[0].email === email1)
+                assert.isOk(toEmail1)
+                assert.equal(toEmail1.substitutions['%organizationName%'], 'helloWorld')
+                const toEmail2 = personalizations.find((p) => p.to[0].email === email2)
+                assert.isOk(toEmail2)
+                assert.equal(toEmail2.substitutions['%organizationName%'], 'helloWorld')
               })
               .asCallback(done)
           })
         })
         describe('failure', function () {
           beforeEach(function (done) {
-            sendgrid._sendgrid.sendAsync.returns(rejectionPromise)
+            sendgrid._sendgrid.API.returns(rejectionPromise)
             done()
           })
           it('should return the normal error when isOperational', function (done) {
@@ -154,7 +216,7 @@ describe('sendgrid', function () {
               .then(thisShouldNotBeCalled)
               .catch(function (err) {
                 assert.equal(err, error)
-                sinon.assert.calledOnce(sendgrid._sendgrid.sendAsync)
+                sinon.assert.calledOnce(sendgrid._sendgrid.API)
               })
               .asCallback(done)
           })

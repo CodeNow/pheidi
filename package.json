@@ -59,7 +59,7 @@
     "mongodb": "2.1.17",
     "monitor-dog": "^1.5.0",
     "ponos": "^5.1.1",
-    "sendgrid": "^1.9.2",
+    "sendgrid": "^4.1.0",
     "slack-client": "~1.4.0",
     "underscore.string": "^3.3.4"
   },
