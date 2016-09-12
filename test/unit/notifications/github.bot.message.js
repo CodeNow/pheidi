@@ -5,19 +5,28 @@ chai.use(require('chai-as-promised'))
 const assert = chai.assert
 const GitHubBotMessage = require('notifications/github.bot.message')
 
-describe('GitHubBotMessage', function () {
+describe('GitHubBotMessage', () => {
   const ctx = {}
   ctx.instance = {
     _id: 'inst-1-id',
-    name: 'inst-1',
+    name: 'feature-1-hellonode',
     owner: {
       username: 'codenow'
     },
     shortHash: 'ga71a12',
-    masterPod: true
+    masterPod: true,
+    contextVersions: [
+      {
+        appCodeVersions: [
+          {
+            branch: 'feature-1'
+          }
+        ]
+      }
+    ]
   }
-  describe('#_render', function () {
-    it('should return correct message for the running single instance', function (done) {
+  describe('#_render', () => {
+    it('should return correct message for the running single instance', (done) => {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
@@ -25,11 +34,11 @@ describe('GitHubBotMessage', function () {
         state: 'running'
       }
       const md = GitHubBotMessage.render(gitInfo, ctx.instance)
-      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) to [your environment](https://web.runnable.dev/codenow/inst-1)\n<sub>*From [Runnable](http://runnable.com)*</sub>')
+      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode/feature-1](http://ga71a12-feature-1-hellonode-staging-codenow.runnableapp.com). [View on Runnable](https://web.runnable.dev/codenow/feature-1-hellonode).\n<sub>*From [Runnable](http://runnable.com)*</sub>')
       done()
     })
 
-    it('should return correct message for the isolated group', function (done) {
+    it('should return correct message for the isolated group', (done) => {
       const gitInfo = {
         repo: 'codenow/hellonode',
         branch: 'feature-1',
@@ -38,8 +47,8 @@ describe('GitHubBotMessage', function () {
       }
       const md = GitHubBotMessage.render(gitInfo, ctx.instance, [ { name: 'inst-2', owner: { username: 'codenow' } } ])
       let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
-      message += 'title="Running" width="9" height="9"> [inst-1](http://ga71a12-inst-1-staging-codenow.runnableapp.com) '
-      message += 'to [your environment](https://web.runnable.dev/codenow/inst-1)'
+      message += 'title="Running" width="9" height="9"> [hellonode/feature-1](http://ga71a12-feature-1-hellonode-staging-codenow.runnableapp.com). '
+      message += '[View on Runnable](https://web.runnable.dev/codenow/feature-1-hellonode).'
       message += '\n<sub>Related containers: '
       message += '[inst-2](https://web.runnable.dev/codenow/inst-2)*— From [Runnable](http://runnable.com)*</sub>'
       assert.equal(md, message)
@@ -47,26 +56,26 @@ describe('GitHubBotMessage', function () {
     })
   })
 
-  describe('#_renderIsolatedInstance', function () {
-    it('should return empty string if null was passed', function (done) {
+  describe('#_renderIsolatedInstance', () => {
+    it('should return empty string if null was passed', (done) => {
       const md = GitHubBotMessage.renderIsolatedInstance(null)
       assert.equal(md, '')
       done()
     })
 
-    it('should return empty string if empty string was passed', function (done) {
+    it('should return empty string if empty string was passed', (done) => {
       const md = GitHubBotMessage.renderIsolatedInstance('')
       assert.equal(md, '')
       done()
     })
 
-    it('should return empty string if empty array was passed', function (done) {
+    it('should return empty string if empty array was passed', (done) => {
       const md = GitHubBotMessage.renderIsolatedInstance([])
       assert.equal(md, '')
       done()
     })
 
-    it('should return md with two items if array has two elements', function (done) {
+    it('should return md with two items if array has two elements', (done) => {
       const insts = [
         {
           name: 'inst-1',
