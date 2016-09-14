@@ -12,9 +12,9 @@ chai.use(require('chai-as-promised'))
 const assert = chai.assert
 const OrganizationService = require('services/organization-service')
 
-const NotifyInvoicePaymentFailure = require('workers/organization.invoice.payment-failure').task
+const NotifyInvoicePaymentFailure = require('workers/organization.invoice.payment-failed').task
 
-describe('organization.invoice.payment-failure', () => {
+describe('organization.invoice.payment-failed', () => {
   describe('Worker', () => {
     let billingErrorToAdminStub
     let billingErrorToAllMembersStub
