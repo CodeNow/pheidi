@@ -48,6 +48,7 @@ describe('sendgrid', function () {
     const emailsForAllMembersOfOrganization = ['jorge.silva@thejsj.com']
     const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
     const organizationCreatorEmail = 'jorge@runnable.com'
+    const userName = 'thejsj'
 
     const stubOutSendBillingEmail = function () {
       sinon.stub(sendgrid, 'sendBillingEmail').resolves()
@@ -453,14 +454,15 @@ describe('sendgrid', function () {
         afterEach(restoreSendNotificationEmail)
 
         it('should attempt to send emails with the given arguments', function (done) {
-          sendgrid.welcomeEmailForOrganization(organizationName, organizationCreatorEmail)
+          sendgrid.welcomeEmailForOrganization(organizationName, organizationCreatorEmail, userName)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.sendNotificationEmail)
-              var paymentMethodAddedOrRemovedArgs = sendgrid.sendNotificationEmail.args[0]
-              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
-              assert.equal(paymentMethodAddedOrRemovedArgs[1], organizationCreatorEmail)
-              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.WELCOME_EMAIL_FOR_ORGANIZATION)
-              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_WELCOME_EMAIL_FOR_ORGANIZATION_TEMPLATE)
+              var args = sendgrid.sendNotificationEmail.args[0]
+              assert.equal(args[0], organizationName)
+              assert.equal(args[1], organizationCreatorEmail)
+              assert.equal(args[2], emailCopy.WELCOME_EMAIL_FOR_ORGANIZATION)
+              assert.equal(args[3], process.env.SENDGRID_WELCOME_EMAIL_FOR_ORGANIZATION_TEMPLATE)
+              assert.deepEqual(args[4], { '%userName%': userName })
             })
             .asCallback(done)
         })
@@ -471,14 +473,15 @@ describe('sendgrid', function () {
         afterEach(restoreSendNotificationEmail)
 
         it('should attempt to send emails with the given arguments', function (done) {
-          sendgrid.userAddedToOrganization(organizationName, organizationCreatorEmail)
+          sendgrid.userAddedToOrganization(organizationName, organizationCreatorEmail, userName)
             .then(function () {
               sinon.assert.calledOnce(sendgrid.sendNotificationEmail)
-              var paymentMethodAddedOrRemovedArgs = sendgrid.sendNotificationEmail.args[0]
-              assert.equal(paymentMethodAddedOrRemovedArgs[0], organizationName)
-              assert.equal(paymentMethodAddedOrRemovedArgs[1], organizationCreatorEmail)
-              assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.USER_ADDED_TO_ORG)
-              assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_USER_ADDED_TO_ORG_TEMPLATE)
+              var args = sendgrid.sendNotificationEmail.args[0]
+              assert.equal(args[0], organizationName)
+              assert.equal(args[1], organizationCreatorEmail)
+              assert.equal(args[2], emailCopy.USER_ADDED_TO_ORG)
+              assert.equal(args[3], process.env.SENDGRID_USER_ADDED_TO_ORG_TEMPLATE)
+              assert.deepEqual(args[4], { '%userName%': userName })
             })
             .asCallback(done)
         })
