@@ -47,18 +47,26 @@ describe('sendgrid', function () {
     const organizationName = 'Runnable'
     const emailsForAllMembersOfOrganization = ['jorge.silva@thejsj.com']
     const paymentMethodOwnerEmail = 'jorge.silva@thejsj.com'
+    const organizationCreatorEmail = 'jorge@runnable.com'
+    const userName = 'thejsj'
 
     const stubOutSendBillingEmail = function () {
       sinon.stub(sendgrid, 'sendBillingEmail').resolves()
     }
     const restoreSendBillingEmail = function () {
-      sendgrid.sendBillingEmail.resolves()
+      sendgrid.sendBillingEmail.restore()
+    }
+    const stubOutSendNotificationnEmail = function () {
+      sinon.stub(sendgrid, 'sendNotificationEmail').resolves()
+    }
+    const restoreSendNotificationEmail = function () {
+      sendgrid.sendNotificationEmail.restore()
     }
     const stubOutSendEmail = function () {
       sinon.stub(sendgrid, 'sendEmail').resolves()
     }
     const restoreSendEmail = function () {
-      sendgrid.sendEmail.resolves()
+      sendgrid.sendEmail.restore()
     }
 
     beforeEach(function (done) {
@@ -274,7 +282,37 @@ describe('sendgrid', function () {
               assert.equal(sendEmailOptions.subject, emailCopy.PAYMENT_METHOD_ADDED.en.subject)
               assert.isString(sendEmailOptions.template)
               assert.equal(sendEmailOptions.template, templateName)
+              assert.deepEqual(sendEmailOptions.category, ['billing'])
               assert.isString(sendEmailOptions.body)
+              assert.equal(sendEmailOptions.body, emailCopy.PAYMENT_METHOD_ADDED.en.body)
+              assert.isString(sendEmailOptions.htmlBody)
+              assert.equal(sendEmailOptions.htmlBody, emailCopy.PAYMENT_METHOD_ADDED.en.htmlBody)
+              assert.isObject(sendEmailOptions.substitutions)
+              assert.equal(sendEmailOptions.substitutions['%organizationName%'], 'Runnable')
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#sendNotificationEmail', function () {
+        const templateName = 'hello'
+        beforeEach(stubOutSendEmail)
+        afterEach(restoreSendEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.sendEmail.returns(Promise.resolve(true))
+
+          sendgrid.sendNotificationEmail(organizationName, paymentMethodOwnerEmail, emailCopy.PAYMENT_METHOD_ADDED, templateName)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendEmail)
+              var sendEmailOptions = sendgrid.sendEmail.args[0][0]
+              assert.equal(sendEmailOptions.email, paymentMethodOwnerEmail)
+              assert.equal(sendEmailOptions.fromname, 'Runnable Support')
+              assert.equal(sendEmailOptions.subject, emailCopy.PAYMENT_METHOD_ADDED.en.subject)
+              assert.isString(sendEmailOptions.template)
+              assert.equal(sendEmailOptions.template, templateName)
+              assert.isString(sendEmailOptions.body)
+              assert.deepEqual(sendEmailOptions.category, ['notification'])
               assert.equal(sendEmailOptions.body, emailCopy.PAYMENT_METHOD_ADDED.en.body)
               assert.isString(sendEmailOptions.htmlBody)
               assert.equal(sendEmailOptions.htmlBody, emailCopy.PAYMENT_METHOD_ADDED.en.htmlBody)
@@ -406,6 +444,44 @@ describe('sendgrid', function () {
               assert.equal(paymentMethodAddedOrRemovedArgs[1], emailsForAllMembersOfOrganization)
               assert.equal(paymentMethodAddedOrRemovedArgs[2], emailCopy.BILLING_ERROR_ALL)
               assert.equal(paymentMethodAddedOrRemovedArgs[3], process.env.SENDGRID_BILLING_ERROR_ALL_TEMPLATE)
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#welcomeEmailForOrganization ', () => {
+        beforeEach(stubOutSendNotificationnEmail)
+        afterEach(restoreSendNotificationEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.welcomeEmailForOrganization(organizationName, organizationCreatorEmail, userName)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendNotificationEmail)
+              var args = sendgrid.sendNotificationEmail.args[0]
+              assert.equal(args[0], organizationName)
+              assert.equal(args[1], organizationCreatorEmail)
+              assert.equal(args[2], emailCopy.WELCOME_EMAIL_FOR_ORGANIZATION)
+              assert.equal(args[3], process.env.SENDGRID_WELCOME_EMAIL_FOR_ORGANIZATION_TEMPLATE)
+              assert.deepEqual(args[4], { '%userName%': userName })
+            })
+            .asCallback(done)
+        })
+      })
+
+      describe('#userAddedToOrganization', () => {
+        beforeEach(stubOutSendNotificationnEmail)
+        afterEach(restoreSendNotificationEmail)
+
+        it('should attempt to send emails with the given arguments', function (done) {
+          sendgrid.userAddedToOrganization(organizationName, organizationCreatorEmail, userName)
+            .then(function () {
+              sinon.assert.calledOnce(sendgrid.sendNotificationEmail)
+              var args = sendgrid.sendNotificationEmail.args[0]
+              assert.equal(args[0], organizationName)
+              assert.equal(args[1], organizationCreatorEmail)
+              assert.equal(args[2], emailCopy.USER_ADDED_TO_ORG)
+              assert.equal(args[3], process.env.SENDGRID_USER_ADDED_TO_ORG_TEMPLATE)
+              assert.deepEqual(args[4], { '%userName%': userName })
             })
             .asCallback(done)
         })
