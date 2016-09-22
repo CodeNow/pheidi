@@ -5,6 +5,10 @@ sudo: false
 services:
   - rabbitmq
 script:
-  - npm run test
+  - npm run lint
+  - npm run coverage
+  - npm run unit
 before_install:
   - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
+after_success:
+  - npm run codeclimate
