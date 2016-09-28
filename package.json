@@ -1,12 +1,13 @@
 {
   "name": "pheidi",
-  "version": "1.30.0",
+  "version": "1.30.2",
   "description": "Runnable notifications worker server",
   "main": "index.js",
   "scripts": {
     "lint": "standard --verbose",
     "check-coverage": "istanbul check-coverage --statement 86 --branches 77 --functions 72 --lines 86 && echo 'Coverage check successful!'",
     "coverage": "NODE_ENV=test NODE_PATH=./lib istanbul cover ./node_modules/mocha/bin/_mocha -- $npm_package_options_mocha test/ && npm run check-coverage",
+    "codeclimate": "npm install -g codeclimate-test-reporter && codeclimate-test-reporter < ./coverage/lcov.info",
     "start": "NODE_PATH=./lib node index.js",
     "unit": "NODE_ENV=test NODE_PATH=./lib mocha $npm_package_options_mocha test/unit",
     "unit-no-bail": "NODE_ENV=test NODE_PATH=./lib mocha --timeout 5000 --recursive --reporter spec test/unit",
