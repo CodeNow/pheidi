@@ -64,7 +64,7 @@ describe('organization.user.added', () => {
       SendGrid.prototype.userAddedToOrganization.restore()
     })
 
-    it('should get the organization', done => {
+    it('should get the organization', (done) => {
       SendWelcomeEmailToNewlyAddedUser(validJob)
         .then(() => {
           sinon.assert.calledOnce(bigPoppa.getOrganization)
@@ -73,12 +73,12 @@ describe('organization.user.added', () => {
         .asCallback(done)
     })
 
-    it('should throw a `WorkerStopError` if the user is also the org creator', done => {
+    it('should throw a `WorkerStopError` if the user is also the org creator', (done) => {
       org.creator.id = userId
       bigPoppa.getOrganization.resolves(org)
 
       SendWelcomeEmailToNewlyAddedUser(validJob)
-        .asCallback(err => {
+        .asCallback((err) => {
           assert.isOk(err)
           assert.instanceOf(err, WorkerStopError)
           assert.match(err.message, /this.*organization.*creator.*already.*sent/i)
@@ -86,7 +86,7 @@ describe('organization.user.added', () => {
         })
     })
 
-    it('should find the user in Mongo', done => {
+    it('should find the user in Mongo', (done) => {
       SendWelcomeEmailToNewlyAddedUser(validJob)
         .then(() => {
           sinon.assert.calledOnce(mongoClient.findOneUserAsync)
@@ -97,7 +97,7 @@ describe('organization.user.added', () => {
         .asCallback(done)
     })
 
-    it('should throw an error if there is no username', done => {
+    it('should throw an error if there is no username', (done) => {
       user.accounts.github.username = null
       mongoClient.findOneUserAsync.resolves(user)
 
@@ -110,7 +110,7 @@ describe('organization.user.added', () => {
       })
     })
 
-    it('should throw an error if there is no email', done => {
+    it('should throw an error if there is no email', (done) => {
       user.email = null
       mongoClient.findOneUserAsync.resolves(user)
 
