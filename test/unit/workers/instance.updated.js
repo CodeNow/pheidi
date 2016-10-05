@@ -35,19 +35,15 @@ describe('Instance Updated Worker', function () {
             github: 2828361,
             username: 'Runnable'
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {
-                failed: true
-              }
+          contextVersion: {
+            appCodeVersions: [{
+              repo: 'CodeNow/api',
+              branch: 'feature1'
+            }],
+            build: {
+              failed: true
             }
-          ]
+          }
         }
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isDefined(err)
@@ -62,19 +58,15 @@ describe('Instance Updated Worker', function () {
             github: 2828361
           },
           isTesting: true,
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {
-                failed: true
-              }
+          contextVersion: {
+            appCodeVersions: [{
+              repo: 'CodeNow/api',
+              branch: 'feature1'
+            }],
+            build: {
+              failed: true
             }
-          ]
+          }
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
@@ -88,20 +80,16 @@ describe('Instance Updated Worker', function () {
           owner: {
             github: 2828361
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1',
-                  additionalRepo: true
-                }
-              ],
-              build: {
-                failed: true
-              }
+          contextVersion: {
+            appCodeVersions: [{
+              repo: 'CodeNow/api',
+              branch: 'feature1',
+              additionalRepo: true
+            }],
+            build: {
+              failed: true
             }
-          ]
+          }
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
@@ -115,17 +103,13 @@ describe('Instance Updated Worker', function () {
           owner: {
             github: 2828361
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {}
-            }
-          ]
+          contextVersion: {
+            appCodeVersions: [{
+              repo: 'CodeNow/api',
+              branch: 'feature1'
+            }],
+            build: {}
+          }
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
@@ -141,19 +125,15 @@ describe('Instance Updated Worker', function () {
             github: 2828361,
             username: 'Runnable'
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ],
-              build: {
-                failed: true
-              }
+          contextVersion: {
+            appCodeVersions: [{
+              repo: 'CodeNow/api',
+              branch: 'feature1'
+            }],
+            build: {
+              failed: true
             }
-          ]
+          }
         }
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isNull(err)
