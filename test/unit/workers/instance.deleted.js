@@ -37,16 +37,14 @@ describe('Instance Deleted Worker', function () {
           owner: {
             github: 2828361
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ]
-            }
-          ]
+          contextVersion: {
+            appCodeVersions: [
+              {
+                repo: 'CodeNow/api',
+                branch: 'feature1'
+              }
+            ]
+          }
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
@@ -61,16 +59,14 @@ describe('Instance Deleted Worker', function () {
           owner: {
             github: 213123123123123
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1'
-                }
-              ]
-            }
-          ]
+          contextVersion: {
+            appCodeVersions: [
+              {
+                repo: 'CodeNow/api',
+                branch: 'feature1'
+              }
+            ]
+          }
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
@@ -85,17 +81,15 @@ describe('Instance Deleted Worker', function () {
           owner: {
             github: 2828361
           },
-          contextVersions: [
-            {
-              appCodeVersions: [
-                {
-                  repo: 'CodeNow/api',
-                  branch: 'feature1',
-                  additionalRepo: true
-                }
-              ]
-            }
-          ]
+          contextVersion: {
+            appCodeVersions: [
+              {
+                repo: 'CodeNow/api',
+                branch: 'feature1',
+                additionalRepo: true
+              }
+            ]
+          }
         }
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isNull(err)
@@ -114,16 +108,14 @@ describe('Instance Deleted Worker', function () {
               github: 2828361,
               username: 'Runnable'
             },
-            contextVersions: [
-              {
-                appCodeVersions: [
-                  {
-                    repo: 'CodeNow/api',
-                    branch: 'feature1'
-                  }
-                ]
-              }
-            ]
+            contextVersion: {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isDefined(err)
@@ -139,16 +131,14 @@ describe('Instance Deleted Worker', function () {
               github: 2828361,
               username: 'Runnable'
             },
-            contextVersions: [
-              {
-                appCodeVersions: [
-                  {
-                    repo: 'CodeNow/api',
-                    branch: 'feature1'
-                  }
-                ]
-              }
-            ]
+            contextVersion: {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isNull(err)
@@ -172,16 +162,14 @@ describe('Instance Deleted Worker', function () {
               username: 'Runnable'
             },
             masterPod: true,
-            contextVersions: [
-              {
-                appCodeVersions: [
-                  {
-                    repo: 'CodeNow/api',
-                    branch: 'feature1'
-                  }
-                ]
-              }
-            ]
+            contextVersion: {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isDefined(err)
@@ -199,16 +187,14 @@ describe('Instance Deleted Worker', function () {
               username: 'Runnable'
             },
             masterPod: true,
-            contextVersions: [
-              {
-                appCodeVersions: [
-                  {
-                    repo: 'CodeNow/api',
-                    branch: 'feature1'
-                  }
-                ]
-              }
-            ]
+            contextVersion: {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isDefined(err)
@@ -227,16 +213,14 @@ describe('Instance Deleted Worker', function () {
               username: 'Runnable'
             },
             masterPod: true,
-            contextVersions: [
-              {
-                appCodeVersions: [
-                  {
-                    repo: 'CodeNow/api',
-                    branch: 'feature1'
-                  }
-                ]
-              }
-            ]
+            contextVersion: {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isDefined(err)
@@ -254,16 +238,14 @@ describe('Instance Deleted Worker', function () {
               github: 2828361,
               username: 'Runnable'
             },
-            contextVersions: [
-              {
-                appCodeVersions: [
-                  {
-                    repo: 'CodeNow/api',
-                    branch: 'feature1'
-                  }
-                ]
-              }
-            ]
+            contextVersion: {
+              appCodeVersions: [
+                {
+                  repo: 'CodeNow/api',
+                  branch: 'feature1'
+                }
+              ]
+            }
           }
           Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
             assert.isNull(err)
