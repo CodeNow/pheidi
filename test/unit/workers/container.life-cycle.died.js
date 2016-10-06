@@ -27,6 +27,7 @@ describe('Container life-cycle died', () => {
     }
     const mockParams = {
       id: 'fakeId',
+      needsInspect: true,
       inspectData: {
         Config: {
           Labels: {
