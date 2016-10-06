@@ -88,7 +88,7 @@ describe('Container life-cycle died', () => {
       })
       Worker(job).asCallback((err) => {
         assert.isNull(err)
-        sinon.assert.notCalled(Mongo.prototype.findOneContextVersionAsync)
+        sinon.assert.notCalled(Mongo.prototype.findInstancesAsync)
         done()
       })
     })
