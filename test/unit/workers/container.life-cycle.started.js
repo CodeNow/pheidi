@@ -76,6 +76,23 @@ describe('Container life-cycle started', () => {
       })
     })
 
+    it('should do nothing if no type not valid', (done) => {
+      const job = Object.assign({}, mockParams, {
+        inspectData: {
+          Config: {
+            Labels: {
+              type: 'layerCopy'
+            }
+          }
+        }
+      })
+      Worker(job).asCallback((err) => {
+        assert.isNull(err)
+        sinon.assert.notCalled(Mongo.prototype.findOneContextVersionAsync)
+        done()
+      })
+    })
+
     it('should fail if no context version is found', (done) => {
       Mongo.prototype.findInstancesAsync.resolves(null)
       Worker(mockParams).asCallback((err) => {
