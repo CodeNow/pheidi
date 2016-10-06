@@ -27,6 +27,7 @@ describe('Container life-cycle died', () => {
     }
     const mockParams = {
       id: 'fakeId',
+      needsInspect: true,
       inspectData: {
         Config: {
           Labels: {
@@ -70,6 +71,23 @@ describe('Container life-cycle died', () => {
 
     it('should do nothing if no inspectData', (done) => {
       Worker({ id: 'fakeId' }).asCallback((err) => {
+        assert.isNull(err)
+        sinon.assert.notCalled(Mongo.prototype.findInstancesAsync)
+        done()
+      })
+    })
+
+    it('should do nothing if no type not valid', (done) => {
+      const job = Object.assign({}, mockParams, {
+        inspectData: {
+          Config: {
+            Labels: {
+              type: 'layerCopy'
+            }
+          }
+        }
+      })
+      Worker(job).asCallback((err) => {
         assert.isNull(err)
         sinon.assert.notCalled(Mongo.prototype.findInstancesAsync)
         done()
