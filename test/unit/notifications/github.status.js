@@ -17,6 +17,7 @@ describe('github.status', () => {
     let mockState
     let mockUser
     let mockMessage
+    let mockMasterInstance
 
     beforeEach(() => {
       mockMessage = 'mock message'
@@ -29,7 +30,22 @@ describe('github.status', () => {
           createdBy: {
             github: 1234
           }
-        }
+        },
+        parent: '1234',
+        masterPod: false
+      }
+      mockMasterInstance = {
+        owner: {
+          username: 'foo'
+        },
+        name: 'helloMaster',
+        contextVersion: {
+          createdBy: {
+            github: 1234
+          }
+        },
+        masterPod: true,
+        shortHash: '1234'
       }
       mockUser = {
         accounts: {
@@ -44,11 +60,13 @@ describe('github.status', () => {
       }
       mockState = 'success'
       sinon.stub(Mongo.prototype, 'findOneUserAsync').resolves(mockUser)
+      sinon.stub(Mongo.prototype, 'findOneInstanceAsync').resolves(mockMasterInstance)
       sinon.stub(GitHub.prototype, 'createStatus').resolves()
     })
 
     afterEach(() => {
       Mongo.prototype.findOneUserAsync.restore()
+      Mongo.prototype.findOneInstanceAsync.restore()
       GitHub.prototype.createStatus.restore()
     })
 
@@ -99,21 +117,36 @@ describe('github.status', () => {
     })
 
     it('should create a github status', function (done) {
-      githubStatus.setStatus(mockInstance, mockMainACV, mockState, mockMessage)
+      githubStatus.setStatus(mockMasterInstance, mockMainACV, mockState, mockMessage)
         .asCallback((err) => {
           assert.isNull(err)
           sinon.assert.calledOnce(GitHub.prototype.createStatus)
-          sinon.assert.calledWith(GitHub.prototype.createStatus, mockInstance, mockMainACV, mockState, mockMessage)
+          sinon.assert.calledWith(GitHub.prototype.createStatus, mockMasterInstance, mockMainACV, mockState, mockMessage, mockMasterInstance.name)
           done()
         })
     })
 
     it('should create a github status with default message', function (done) {
+      githubStatus.setStatus(mockMasterInstance, mockMainACV, mockState)
+        .asCallback((err) => {
+          assert.isNull(err)
+          sinon.assert.calledOnce(GitHub.prototype.createStatus)
+          sinon.assert.calledWith(GitHub.prototype.createStatus, mockMasterInstance, mockMainACV, mockState, 'Tests completed successfully', mockMasterInstance.name)
+          done()
+        })
+    })
+
+    it('should lookup the master if its not the masterpod', function (done) {
       githubStatus.setStatus(mockInstance, mockMainACV, mockState)
         .asCallback((err) => {
           assert.isNull(err)
           sinon.assert.calledOnce(GitHub.prototype.createStatus)
-          sinon.assert.calledWith(GitHub.prototype.createStatus, mockInstance, mockMainACV, mockState, 'Tests completed successfully')
+          sinon.assert.calledWith(GitHub.prototype.createStatus, mockInstance, mockMainACV, mockState, 'Tests completed successfully', mockMasterInstance.name)
+          sinon.assert.calledOnce(Mongo.prototype.findOneInstanceAsync)
+          sinon.assert.calledWith(Mongo.prototype.findOneInstanceAsync, {
+            masterPod: true,
+            shortHash: '1234'
+          })
           done()
         })
     })
