@@ -52,7 +52,7 @@
     "defaults": "^1.0.3",
     "error-cat": "^3.0.0",
     "github4": "1.1.0",
-    "intercom.io": "^1.2.1",
+    "intercom-client": "^2.8.5",
     "joi": "^9.0.4",
     "keypather": "^2.0.0",
     "loadenv": "^2.1.0",
