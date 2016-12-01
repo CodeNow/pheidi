@@ -2,7 +2,7 @@
 
 const chai = require('chai')
 const bigPoppa = require('models/big-poppa')
-const SendGrid = require('models/sendgrid')
+const Intercom = require('intercom-client')
 const mongoClient = require('mongo-helper').client
 const Promise = require('bluebird')
 const sinon = require('sinon')
