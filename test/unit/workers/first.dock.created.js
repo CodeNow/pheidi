@@ -16,7 +16,9 @@ const Worker = require('workers/first.dock.created').task
 describe('First Dock Created', () => {
   describe('Worker', () => {
     let orgs
-    let user
+    let userInBigPoppa
+    let userInIntercom
+    let client
     const organizationName = 'CodeNow'
     const userName = 'thejsj'
     const userEmail = 'jorge.silva@thejsj.com'
@@ -29,7 +31,7 @@ describe('First Dock Created', () => {
           id: creatorId
         }
       }]
-      user = {
+      userInBigPoppa = {
         email: userEmail,
         accounts: {
           github: {
@@ -37,14 +39,27 @@ describe('First Dock Created', () => {
           }
         }
       }
+      userInIntercom = {
+        body: {
+          id: 'thejsj'
+        }
+      }
+      client = {
+        users: {
+          find: sinon.stub.resolves(userInIntercom)
+        },
+        messages: {
+          create: sinon.stub.resolves(true)
+        }
+      }
       sinon.stub(bigPoppa, 'getOrganizations').resolves(orgs)
-      sinon.stub(mongoClient, 'findOneUserAsync').resolves(user)
-      sinon.stub(SendGrid.prototype, 'dockCreated').resolves(true)
+      sinon.stub(mongoClient, 'findOneUserAsync').resolves(userInBigPoppa)
+      sinon.stub(Intercom, 'Client').returns(client)
       done()
     })
 
     afterEach((done) => {
-      SendGrid.prototype.dockCreated.restore()
+      Intercom.Client.restore()
       mongoClient.findOneUserAsync.restore()
       bigPoppa.getOrganizations.restore()
       done()
@@ -64,7 +79,7 @@ describe('First Dock Created', () => {
     })
     it('should return WorkerStopError if email fails', function (done) {
       var error = new Error('HEY')
-      SendGrid.prototype.dockCreated.rejects(error)
+      Intercom.Client.rejects(error)
 
       Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isDefined(err)
@@ -83,8 +98,8 @@ describe('First Dock Created', () => {
         assert.isNotOk(err)
         sinon.assert.calledOnce(bigPoppa.getOrganizations)
         sinon.assert.calledWith(bigPoppa.getOrganizations, { githubId: '23123213' })
-        sinon.assert.calledOnce(SendGrid.prototype.dockCreated)
-        sinon.assert.calledWith(SendGrid.prototype.dockCreated, org)
+        sinon.assert.calledOnce(Intercom.dockCreated)
+        sinon.assert.calledWith(Intercom.dockCreated, org)
         done()
       })
     })
