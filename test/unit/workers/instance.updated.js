@@ -12,39 +12,51 @@ require('sinon-as-promised')(Promise)
 
 const rabbitmq = require('rabbitmq')
 const JobModule = require('workers/instance.updated')
+const utils = require('models/utils')
 const Worker = JobModule.task
 
 describe('Instance Updated Worker', function () {
+  let instance
   describe('worker', function () {
     describe('regular flow', function () {
       beforeEach(function (done) {
-        sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
-        done()
-      })
-
-      afterEach(function (done) {
-        rabbitmq.publishGitHubBotNotify.restore()
-        done()
-      })
-
-      it('should fail if notifyOnUpdate throwed', function (done) {
-        const githubError = new Error('GitHub error')
-        rabbitmq.publishGitHubBotNotify.throws(githubError)
-        const instance = {
+        const repo = 'CodeNow/api'
+        const branch = 'feature1'
+        const state = 'failed'
+        instance = {
           owner: {
             github: 2828361,
             username: 'Runnable'
           },
           contextVersion: {
             appCodeVersions: [{
-              repo: 'CodeNow/api',
-              branch: 'feature1'
+              repo,
+              branch
             }],
             build: {
               failed: true
             }
           }
         }
+        sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
+        // sinon.stub(utils, 'getPushInfoForInstance').returns({
+          // repo,
+          // branch,
+          // state
+        // })
+        done()
+      })
+
+      afterEach(function (done) {
+        rabbitmq.publishGitHubBotNotify.restore()
+        // utils.getPushInfoForInstance.restore()
+        done()
+      })
+
+      it('should fail if notifyOnUpdate throwed', function (done) {
+        const githubError = new Error('GitHub error')
+        rabbitmq.publishGitHubBotNotify.throws(githubError)
+
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isDefined(err)
           assert.equal(err.message, githubError.message)
@@ -53,88 +65,33 @@ describe('Instance Updated Worker', function () {
       })
 
       it('should do nothing if testing instance', function (done) {
-        const instance = {
-          owner: {
-            github: 2828361
-          },
-          isTesting: true,
-          contextVersion: {
-            appCodeVersions: [{
-              repo: 'CodeNow/api',
-              branch: 'feature1'
-            }],
-            build: {
-              failed: true
-            }
-          }
-        }
+        instance.isTesting = true
         Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
+          assert.isNotNull(err)
           sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })
 
       it('should do nothing if no acv was found', function (done) {
-        const instance = {
-          owner: {
-            github: 2828361
-          },
-          contextVersion: {
-            appCodeVersions: [{
-              repo: 'CodeNow/api',
-              branch: 'feature1',
-              additionalRepo: true
-            }],
-            build: {
-              failed: true
-            }
-          }
-        }
+        instance.contextVersion.appCodeVersions[0].additionalRepo = true
         Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
+          assert.isNotNull(err)
           sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })
 
       it('should do nothing if instance state is invalid', function (done) {
-        const instance = {
-          owner: {
-            github: 2828361
-          },
-          contextVersion: {
-            appCodeVersions: [{
-              repo: 'CodeNow/api',
-              branch: 'feature1'
-            }],
-            build: {}
-          }
-        }
+        instance.contextVersion.build = {}
         Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
+          assert.isNotNull(err)
           sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
           done()
         })
       })
 
       it('should call rabbitmq.publishGitHubBotNotify', function (done) {
-        const instance = {
-          id: '57153cef3f41b71d004e7c27',
-          owner: {
-            github: 2828361,
-            username: 'Runnable'
-          },
-          contextVersion: {
-            appCodeVersions: [{
-              repo: 'CodeNow/api',
-              branch: 'feature1'
-            }],
-            build: {
-              failed: true
-            }
-          }
-        }
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isNull(err)
           sinon.assert.calledOnce(rabbitmq.publishGitHubBotNotify)
