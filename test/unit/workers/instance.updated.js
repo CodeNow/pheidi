@@ -14,6 +14,7 @@ const rabbitmq = require('rabbitmq')
 const JobModule = require('workers/instance.updated')
 const utils = require('models/utils')
 const Worker = JobModule.task
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
 
 describe('Instance Updated Worker', function () {
   let instance
@@ -39,21 +40,21 @@ describe('Instance Updated Worker', function () {
           }
         }
         sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
-        // sinon.stub(utils, 'getPushInfoForInstance').returns({
-          // repo,
-          // branch,
-          // state
-        // })
+        sinon.stub(utils, 'getPushInfoForInstance').returns({
+          repo,
+          branch,
+          state
+        })
         done()
       })
 
       afterEach(function (done) {
         rabbitmq.publishGitHubBotNotify.restore()
-        // utils.getPushInfoForInstance.restore()
+        utils.getPushInfoForInstance.restore()
         done()
       })
 
-      it('should fail if notifyOnUpdate throwed', function (done) {
+      it('should fail if there publishGitHubBotNotify fails', function (done) {
         const githubError = new Error('GitHub error')
         rabbitmq.publishGitHubBotNotify.throws(githubError)
 
@@ -64,29 +65,12 @@ describe('Instance Updated Worker', function () {
         })
       })
 
-      it('should do nothing if testing instance', function (done) {
-        instance.isTesting = true
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNotNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
-          done()
-        })
-      })
+      it('should fail if there is no push info returned', function (done) {
+        utils.getPushInfoForInstance.returns(null)
 
-      it('should do nothing if no acv was found', function (done) {
-        instance.contextVersion.appCodeVersions[0].additionalRepo = true
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNotNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
-          done()
-        })
-      })
-
-      it('should do nothing if instance state is invalid', function (done) {
-        instance.contextVersion.build = {}
-        Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNotNull(err)
-          sinon.assert.notCalled(rabbitmq.publishGitHubBotNotify)
+        Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
+          assert.isDefined(err)
+          assert.instanceOf(err, WorkerStopError)
           done()
         })
       })
