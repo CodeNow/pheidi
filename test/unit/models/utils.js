@@ -156,6 +156,13 @@ describe('Utils', function () {
       done()
     })
 
+    it('should return null if there is no context version', function (done) {
+      instance.contextVersion = null
+      const pushInfo = utils.getPushInfoForInstance(instance)
+      assert.isNull(pushInfo)
+      done()
+    })
+
     it('should do nothing if testing instance', function (done) {
       instance.isTesting = true
       const pushInfo = utils.getPushInfoForInstance(instance)
