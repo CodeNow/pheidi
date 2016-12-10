@@ -25,6 +25,9 @@ describe('Github Pull-Request Opened Worker', function () {
     describe('Regular Flow', function () {
       beforeEach(function (done) {
         instance1 = {
+          _id: {
+            toString: () => '123'
+          },
           owner: {
             github: 2828361,
             username: 'Runnable'
@@ -47,7 +50,7 @@ describe('Github Pull-Request Opened Worker', function () {
               head: {
                 ref: branch,
                 repo: {
-                  name: repo
+                  full_name: repo
                 }
               }
             }
