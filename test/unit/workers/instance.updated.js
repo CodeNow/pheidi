@@ -40,7 +40,7 @@ describe('Instance Updated Worker', function () {
           }
         }
         sinon.stub(rabbitmq, 'publishGitHubBotNotify').returns()
-        sinon.stub(utils, 'getPushInfoForInstance').returns({
+        sinon.stub(utils, 'getPushInfoForInstance').resolves({
           repo,
           branch,
           state
@@ -66,7 +66,7 @@ describe('Instance Updated Worker', function () {
       })
 
       it('should fail if there is no push info returned', function (done) {
-        utils.getPushInfoForInstance.returns(null)
+        utils.getPushInfoForInstance.rejects(new Error())
 
         Worker({ instance: instance, timestamp: 1461010631023 }).asCallback(function (err) {
           assert.isDefined(err)

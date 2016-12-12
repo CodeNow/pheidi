@@ -58,7 +58,7 @@ describe('Github Pull-Request Opened Worker', function () {
         }
         sinon.stub(rabbitmq, 'publishGitHubBotNotify')
         sinon.stub(mongoClient, 'findInstancesAsync').resolves(instances)
-        sinon.stub(utils, 'getPushInfoForInstance').returns({
+        sinon.stub(utils, 'getPushInfoForInstance').resolves({
           repo,
           branch,
           state
@@ -100,7 +100,7 @@ describe('Github Pull-Request Opened Worker', function () {
       })
 
       it('should only call worker once if `getPushInfoForInstance` is called', function (done) {
-        utils.getPushInfoForInstance.onFirstCall().returns(null)
+        utils.getPushInfoForInstance.onCall(0).rejects(new Error('wowow'))
 
         Worker(payload).asCallback(function (err) {
           assert.isNull(err)
@@ -114,7 +114,7 @@ describe('Github Pull-Request Opened Worker', function () {
       })
 
       it('should not call if `getPushInfoForInstance` is called', function (done) {
-        utils.getPushInfoForInstance.returns(null)
+        utils.getPushInfoForInstance.rejects(new Error())
 
         Worker(payload).asCallback(function (err) {
           assert.isNull(err)

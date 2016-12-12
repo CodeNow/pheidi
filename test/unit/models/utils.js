@@ -158,29 +158,25 @@ describe('Utils', function () {
 
     it('should return null if there is no context version', function (done) {
       instance.contextVersion = null
-      const pushInfo = utils.getPushInfoForInstance(instance)
-      assert.isNull(pushInfo)
+      assert.throws(() => utils.getPushInfoForInstance(instance))
       done()
     })
 
     it('should do nothing if testing instance', function (done) {
       instance.isTesting = true
-      const pushInfo = utils.getPushInfoForInstance(instance)
-      assert.isNull(pushInfo)
+      assert.throws(() => utils.getPushInfoForInstance(instance))
       done()
     })
 
     it('should do nothing if no acv was found', function (done) {
       instance.contextVersion.appCodeVersions[0].additionalRepo = true
-      const pushInfo = utils.getPushInfoForInstance(instance)
-      assert.isNull(pushInfo)
+      assert.throws(() => utils.getPushInfoForInstance(instance))
       done()
     })
 
     it('should do nothing if instance state is invalid', function (done) {
       utils.instanceState.returns(null)
-      const pushInfo = utils.getPushInfoForInstance(instance)
-      assert.isNull(pushInfo)
+      assert.throws(() => utils.getPushInfoForInstance(instance))
       done()
     })
   })
