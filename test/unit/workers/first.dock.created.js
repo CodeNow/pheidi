@@ -18,7 +18,6 @@ describe('First Dock Created', () => {
     let orgs
     let userInBigPoppa
     let userInIntercom
-    let client
     const organizationName = 'CodeNow'
     const userName = 'thejsj'
     const userEmail = 'jorge.silva@thejsj.com'
