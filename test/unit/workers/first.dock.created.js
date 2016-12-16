@@ -2,7 +2,7 @@
 
 const chai = require('chai')
 const bigPoppa = require('models/big-poppa')
-const orion = require('@runnable/orion')
+const SendGrid = require('models/sendgrid')
 const mongoClient = require('mongo-helper').client
 const Promise = require('bluebird')
 const sinon = require('sinon')
@@ -16,8 +16,7 @@ const Worker = require('workers/first.dock.created').task
 describe('First Dock Created', () => {
   describe('Worker', () => {
     let orgs
-    let userInBigPoppa
-    let userInIntercom
+    let user
     const organizationName = 'CodeNow'
     const userName = 'thejsj'
     const userEmail = 'jorge.silva@thejsj.com'
@@ -30,7 +29,7 @@ describe('First Dock Created', () => {
           id: creatorId
         }
       }]
-      userInBigPoppa = {
+      user = {
         email: userEmail,
         accounts: {
           github: {
@@ -38,22 +37,14 @@ describe('First Dock Created', () => {
           }
         }
       }
-      userInIntercom = {
-        body: {
-          id: 'thejsj'
-        }
-      }
-
       sinon.stub(bigPoppa, 'getOrganizations').resolves(orgs)
-      sinon.stub(mongoClient, 'findOneUserAsync').resolves(userInBigPoppa)
-      sinon.stub(orion.users, 'find').resolves(userInIntercom)
-      sinon.stub(orion.messages, 'create').resolves()
+      sinon.stub(mongoClient, 'findOneUserAsync').resolves(user)
+      sinon.stub(SendGrid.prototype, 'dockCreated').resolves(true)
       done()
     })
 
     afterEach((done) => {
-      orion.users.find.restore()
-      orion.messages.create.restore()
+      SendGrid.prototype.dockCreated.restore()
       mongoClient.findOneUserAsync.restore()
       bigPoppa.getOrganizations.restore()
       done()
@@ -71,28 +62,32 @@ describe('First Dock Created', () => {
         done()
       })
     })
-
     it('should return WorkerStopError if email fails', function (done) {
       var error = new Error('HEY')
-      orion.messages.create.rejects(error)
+      SendGrid.prototype.dockCreated.rejects(error)
 
       Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isDefined(err)
-        assert.match(err.message, /Failed to communicate with Intercom/)
+        assert.match(err.message, /Failed to send email/)
         assert.instanceOf(err, WorkerStopError)
         done()
       })
     })
-
     it('should send email on success with string id', function (done) {
+      var org = {
+        login: organizationName,
+        email: userEmail
+      }
+
       Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isNotOk(err)
         sinon.assert.calledOnce(bigPoppa.getOrganizations)
         sinon.assert.calledWith(bigPoppa.getOrganizations, { githubId: '23123213' })
+        sinon.assert.calledOnce(SendGrid.prototype.dockCreated)
+        sinon.assert.calledWith(SendGrid.prototype.dockCreated, org)
         done()
       })
     })
-
     it('should send email on success with number id', function (done) {
       Worker({ githubId: 23123213 }).asCallback((err) => {
         assert.isNotOk(err)
