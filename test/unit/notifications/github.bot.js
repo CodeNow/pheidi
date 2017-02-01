@@ -24,7 +24,11 @@ describe('GitHubBot', function () {
       },
       shortHash: 'ga71a12',
       masterPod: true,
-      container: {}
+      container: {
+        ports: {
+          '7000': {}
+        }
+      }
     }
     done()
   })
