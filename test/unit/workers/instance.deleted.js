@@ -11,6 +11,7 @@ const sinon = require('sinon')
 require('sinon-as-promised')(Promise)
 
 const AccessDeniedError = require('models/access-denied-error')
+const PrAccessDeniedError = require('models/pr-access-denied-error')
 const RateLimitedError = require('models/rate-limited-error')
 const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const GitHubBot = require('notifications/github.bot')
@@ -20,18 +21,20 @@ describe('Instance Deleted Worker', function () {
   describe('worker', function () {
     describe('regular flow', function () {
       beforeEach(function (done) {
+        sinon.stub(GitHubBot.prototype, 'checkPrBotEnabled').resolves()
         sinon.stub(GitHubBot.prototype, 'deleteBranchNotificationsAsync').returns()
         sinon.stub(GitHubBot.prototype, 'deleteAllNotificationsAsync').returns()
         done()
       })
 
       afterEach(function (done) {
+        GitHubBot.prototype.checkPrBotEnabled.restore()
         GitHubBot.prototype.deleteBranchNotificationsAsync.restore()
         GitHubBot.prototype.deleteAllNotificationsAsync.restore()
         done()
       })
 
-      it('should do nothing if testing instance', function (done) {
+      it('should throw workerStopError if testing instance', function (done) {
         const instance = {
           isTesting: true,
           owner: {
@@ -47,14 +50,14 @@ describe('Instance Deleted Worker', function () {
           }
         }
         Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
+          assert.isDefined(err)
+          assert.match(err.message, /Instance is a test instance/)
+          assert.instanceOf(err, WorkerStopError)
           done()
         })
       })
 
-      it('should do nothing if org was not whitelisted', function (done) {
+      it('should workerStopError if org was not enabled', function (done) {
         const instance = {
           owner: {
             github: 213123123123123
@@ -68,10 +71,12 @@ describe('Instance Deleted Worker', function () {
             ]
           }
         }
+        const githubError = new PrAccessDeniedError('No org access for runnabot')
+        GitHubBot.prototype.checkPrBotEnabled.rejects(githubError)
         Worker({ instance: instance }).asCallback(function (err) {
-          assert.isNull(err)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteBranchNotificationsAsync)
-          sinon.assert.notCalled(GitHubBot.prototype.deleteAllNotificationsAsync)
+          assert.isDefined(err)
+          assert.match(err.message, /Runnabot isn\'t enabled on this org/)
+          assert.instanceOf(err, WorkerStopError)
           done()
         })
       })
