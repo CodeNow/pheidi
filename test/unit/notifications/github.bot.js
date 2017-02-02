@@ -267,6 +267,21 @@ describe('GitHubBot', function () {
       })
     })
 
+    it('should succeed if container not found on instance, but build failed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'failed'
+      }
+      delete ctx.instance.container
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
+        assert.isNull(error)
+        done()
+      })
+    })
+
     it('should succeed if container is found on instance.containers', function (done) {
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
