@@ -15,15 +15,23 @@ const tracker = require('models/tracker')
 
 describe('GitHubBot', function () {
   const ctx = {}
-  ctx.instance = {
-    _id: 'inst-1-id',
-    name: 'inst-1',
-    owner: {
-      username: 'codenow'
-    },
-    shortHash: 'ga71a12',
-    masterPod: true
-  }
+  beforeEach(function (done) {
+    ctx.instance = {
+      _id: 'inst-1-id',
+      name: 'inst-1',
+      owner: {
+        username: 'codenow'
+      },
+      shortHash: 'ga71a12',
+      masterPod: true,
+      container: {
+        ports: {
+          '7000': {}
+        }
+      }
+    }
+    done()
+  })
 
   describe('#getToken', function () {
     beforeEach(function (done) {
@@ -239,6 +247,68 @@ describe('GitHubBot', function () {
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
         assert.isDefined(error)
         assert.equal(error, githubError)
+        done()
+      })
+    })
+
+    it('should fail if container not found on instance', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'running'
+      }
+      delete ctx.instance.container
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
+        assert.isDefined(error)
+        assert.match(error.message, /The instance is missing the container/)
+        done()
+      })
+    })
+
+    it('should succeed if container not found on instance, but build failed', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'failed'
+      }
+      delete ctx.instance.container
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
+        assert.isNull(error)
+        done()
+      })
+    })
+
+    it('should succeed if container is found on instance.containers', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'running'
+      }
+      ctx.instance.containers = [ctx.instance.container]
+      delete ctx.instance.container
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
+        assert.isNull(error)
+        done()
+      })
+    })
+
+    it('should succeed if container is missing but is building', function (done) {
+      const githubBot = new GitHubBot('anton-token')
+      const gitInfo = {
+        repo: 'codenow/hellonode',
+        branch: 'feature-1',
+        number: 2,
+        state: 'building'
+      }
+      delete ctx.instance.container
+      githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
+        assert.isNull(error)
         done()
       })
     })

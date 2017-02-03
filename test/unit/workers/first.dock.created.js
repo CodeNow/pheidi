@@ -1,9 +1,9 @@
 'use strict'
 
 const chai = require('chai')
-const FatalGithubError = require('notifications/github.status').FatalGithubError
-const Github = require('models/github')
-const SendGrid = require('models/sendgrid')
+const bigPoppa = require('models/big-poppa')
+const orion = require('@runnable/orion')
+const mongoClient = require('mongo-helper').client
 const Promise = require('bluebird')
 const sinon = require('sinon')
 const WorkerStopError = require('error-cat/errors/worker-stop-error')
@@ -15,65 +15,85 @@ const Worker = require('workers/first.dock.created').task
 
 describe('First Dock Created', () => {
   describe('Worker', () => {
+    let orgs
+    let userInBigPoppa
+    let userInIntercom
+    const organizationName = 'CodeNow'
+    const userName = 'thejsj'
+    const userEmail = 'jorge.silva@thejsj.com'
+    const creatorId = 100
+
     beforeEach((done) => {
-      sinon.stub(SendGrid.prototype, 'dockCreated').resolves(true)
-      sinon.stub(Github.prototype, 'getUserByIdAsync').resolves()
+      orgs = [{
+        name: organizationName,
+        creator: {
+          id: creatorId
+        }
+      }]
+      userInBigPoppa = {
+        email: userEmail,
+        accounts: {
+          github: {
+            username: userName
+          }
+        }
+      }
+      userInIntercom = {
+        body: {
+          id: 'thejsj'
+        }
+      }
+
+      sinon.stub(bigPoppa, 'getOrganizations').resolves(orgs)
+      sinon.stub(mongoClient, 'findOneUserAsync').resolves(userInBigPoppa)
+      sinon.stub(orion.users, 'find').resolves(userInIntercom)
+      sinon.stub(orion.messages, 'create').resolves()
       done()
     })
 
     afterEach((done) => {
-      SendGrid.prototype.dockCreated.restore()
-      Github.prototype.getUserByIdAsync.restore()
+      orion.users.find.restore()
+      orion.messages.create.restore()
+      mongoClient.findOneUserAsync.restore()
+      bigPoppa.getOrganizations.restore()
       done()
     })
 
     it('should fail if no org comes back ', (done) => {
+      bigPoppa.getOrganizations.resolves([])
+
       Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isDefined(err)
-        assert.instanceOf(err, FatalGithubError)
-        assert.match(err.message, /Org did not exist/i)
-        sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
-        sinon.assert.calledWith(Github.prototype.getUserByIdAsync, 23123213)
+        assert.instanceOf(err, WorkerStopError)
+        assert.match(err.message, /Org did not exist in bigPoppa./i)
+        sinon.assert.calledOnce(bigPoppa.getOrganizations)
+        sinon.assert.calledWith(bigPoppa.getOrganizations, { githubId: '23123213' })
         done()
       })
     })
-    it('should return WorkerStopError if email fails', function (done) {
-      var org = {
-        login: 'sadasd'
-      }
-      Github.prototype.getUserByIdAsync.resolves(org)
 
+    it('should return WorkerStopError if email fails', function (done) {
       var error = new Error('HEY')
-      SendGrid.prototype.dockCreated.rejects(error)
+      orion.messages.create.rejects(error)
 
       Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isDefined(err)
-        assert.match(err.message, /Failed to send email/)
+        assert.match(err.message, /Failed to communicate with Intercom/)
         assert.instanceOf(err, WorkerStopError)
         done()
       })
     })
-    it('should send email on success with string id', function (done) {
-      var org = {
-        login: 'sadasd'
-      }
-      Github.prototype.getUserByIdAsync.resolves(org)
 
+    it('should send email on success with string id', function (done) {
       Worker({ githubId: '23123213' }).asCallback((err) => {
         assert.isNotOk(err)
-        sinon.assert.calledOnce(Github.prototype.getUserByIdAsync)
-        sinon.assert.calledWith(Github.prototype.getUserByIdAsync, 23123213)
-        sinon.assert.calledOnce(SendGrid.prototype.dockCreated)
-        sinon.assert.calledWith(SendGrid.prototype.dockCreated, org)
+        sinon.assert.calledOnce(bigPoppa.getOrganizations)
+        sinon.assert.calledWith(bigPoppa.getOrganizations, { githubId: '23123213' })
         done()
       })
     })
-    it('should send email on success with number id', function (done) {
-      var org = {
-        login: 'sadasd'
-      }
-      Github.prototype.getUserByIdAsync.resolves(org)
 
+    it('should send email on success with number id', function (done) {
       Worker({ githubId: 23123213 }).asCallback((err) => {
         assert.isNotOk(err)
         done()
