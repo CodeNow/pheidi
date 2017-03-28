@@ -44,7 +44,7 @@
     "101": "^1.5.0",
     "@runnable/big-poppa-client": "^0.4.0",
     "@runnable/hostname": "^3.0.0",
-    "@runnable/orion": "^1.4.1",
+    "@runnable/orion": "git+ssh://git@github.com/Runnable/orion.git#b0a89d590c55c09e64b3fd7ca45e5c8bb0eaac75",
     "async": "^1.5.2",
     "bluebird": "^3.3.4",
     "bunyan": "^1.8.1",
