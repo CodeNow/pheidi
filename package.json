@@ -72,5 +72,9 @@
     "sinon": "^1.17.3",
     "sinon-as-promised": "^4.0.0",
     "standard": "^6.0.8"
+  },
+  "engine": {
+    "node": "4.2.2",
+    "npm": "2.14.7"
   }
 }

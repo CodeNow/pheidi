@@ -50,7 +50,7 @@ describe('GitHubBotMessage', () => {
       const md = GitHubBotMessage.render(gitInfo, clusterInstance, [ { name: 'ga71a12-b17-node-starter-4-db', owner: { username: 'codenow' } } ])
       let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [web](http://ga71a12-b17-node-starter-4-web-staging-codenow.runnableapp.com), '
-      message +=  '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" '
+      message += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" '
       message += 'title="Failed" width="9" height="9"> [db](http://ga71a12-b17-node-starter-4-db-staging-codenow.runnableapp.com).'
       message += '\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/b17-node-starter-4-web)*</sub>'
       assert.equal(md, message)
