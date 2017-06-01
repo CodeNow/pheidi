@@ -26,7 +26,8 @@ describe('OrganizationService', function () {
   beforeEach(() => {
     emails = [email1, email2]
     org = {
-      users: [{ githubId: githubId1 }, { githubId: githubId2 }]
+      users: [{ githubId: githubId1 }, { githubId: githubId2 }],
+      hasPaymentMethod: true
     }
     sinon.stub(MongoDB.prototype, 'getUserEmailsByGithubIds').resolves(emails)
     sinon.stub(bigPoppa, 'getOrganization').resolves(org)
@@ -82,6 +83,26 @@ describe('OrganizationService', function () {
           )
           assert.isArray(emails)
           assert.lengthOf(emails, 0)
+        })
+        .asCallback(done)
+    })
+  })
+
+  describe('getHasPaymentMethodForOrganization', () => {
+    it('should get the organization', (done) => {
+      OrganizationService.getHasPaymentMethodForOrganization(orgId)
+        .then(() => {
+          sinon.assert.calledOnce(bigPoppa.getOrganization)
+          sinon.assert.calledWithExactly(bigPoppa.getOrganization, orgId)
+        })
+        .asCallback(done)
+    })
+
+    it('should fetch the correct hasPaymentMethod', (done) => {
+      OrganizationService.getHasPaymentMethodForOrganization(orgId)
+        .then((hasPaymentMethod) => {
+          assert.isBoolean(hasPaymentMethod)
+          assert.equal(hasPaymentMethod, true)
         })
         .asCallback(done)
     })

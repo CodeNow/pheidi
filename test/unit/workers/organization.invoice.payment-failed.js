@@ -19,6 +19,7 @@ describe('organization.invoice.payment-failed', () => {
     let billingErrorToAdminStub
     let billingErrorToAllMembersStub
     let getAllUserEmailsForOrganizationStub
+    let getHasPaymentMethodForOrganizationStub
     let getUserEmailByGithubIdStub
 
     let validJob
@@ -43,6 +44,7 @@ describe('organization.invoice.payment-failed', () => {
       }
       emails = [email1, email2]
       getAllUserEmailsForOrganizationStub = sinon.stub(OrganizationService, 'getAllUserEmailsForOrganization').resolves(emails)
+      getHasPaymentMethodForOrganizationStub = sinon.stub(OrganizationService, 'getHasPaymentMethodForOrganization').resolves(true)
       getUserEmailByGithubIdStub = sinon.stub(Mongodb.prototype, 'getUserEmailByGithubId').resolves(paymentMethodOwnerEmail)
       billingErrorToAllMembersStub = sinon.stub(SendGrid.prototype, 'billingErrorToAllMembers').resolves(true)
       billingErrorToAdminStub = sinon.stub(SendGrid.prototype, 'billingErrorToAdmin').resolves(true)
@@ -52,6 +54,7 @@ describe('organization.invoice.payment-failed', () => {
       billingErrorToAdminStub.restore()
       billingErrorToAllMembersStub.restore()
       getAllUserEmailsForOrganizationStub.restore()
+      getHasPaymentMethodForOrganizationStub.restore()
       getUserEmailByGithubIdStub.restore()
     })
 
@@ -66,6 +69,17 @@ describe('organization.invoice.payment-failed', () => {
             )
           })
           .asCallback(done)
+      })
+
+      it('should not send an email without a payment method', (done) => {
+        getHasPaymentMethodForOrganizationStub.resolves(false)
+        NotifyInvoicePaymentFailure(validJob)
+          .asCallback((err) => {
+            assert.isOk(err)
+            assert.instanceOf(err, WorkerStopError)
+            assert.match(err.message, /Organization does not have a payment method/)
+            done()
+          })
       })
 
       it('should send the email', (done) => {
@@ -134,6 +148,17 @@ describe('organization.invoice.payment-failed', () => {
             )
           })
           .asCallback(done)
+      })
+
+      it('should not send an email without a payment method', (done) => {
+        getHasPaymentMethodForOrganizationStub.resolves(false)
+        NotifyInvoicePaymentFailure(validJob)
+          .asCallback((err) => {
+            assert.isOk(err)
+            assert.instanceOf(err, WorkerStopError)
+            assert.match(err.message, /Organization does not have a payment method/)
+            done()
+          })
       })
 
       it('should send the email', (done) => {
