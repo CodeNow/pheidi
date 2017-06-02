@@ -86,6 +86,23 @@ describe('OrganizationService', function () {
         })
         .asCallback(done)
     })
+
+    it('should return an empty array if there are no org is returned', (done) => {
+      bigPoppa.getOrganization.resolves([])
+      MongoDB.prototype.getUserEmailsByGithubIds.resolves([])
+
+      OrganizationService.getAllUserEmailsForOrganization(orgId)
+        .then((emails) => {
+          sinon.assert.calledOnce(MongoDB.prototype.getUserEmailsByGithubIds)
+          sinon.assert.calledWithExactly(
+            MongoDB.prototype.getUserEmailsByGithubIds,
+            []
+          )
+          assert.isArray(emails)
+          assert.lengthOf(emails, 0)
+        })
+        .asCallback(done)
+    })
   })
 
   describe('getHasPaymentMethodForOrganization', () => {

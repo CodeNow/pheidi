@@ -75,7 +75,7 @@ describe('Instance Deleted Worker', function () {
         GitHubBot.prototype.checkPrBotEnabled.rejects(githubError)
         Worker({ instance: instance }).asCallback(function (err) {
           assert.isDefined(err)
-          assert.match(err.message, /Runnabot isn\'t enabled on this org/)
+          assert.match(err.message, /Runnabot isn't enabled on this org/)
           assert.instanceOf(err, WorkerStopError)
           done()
         })
