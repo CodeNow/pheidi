@@ -1,6 +1,6 @@
 {
   "name": "pheidi",
-  "version": "1.38.8",
+  "version": "1.38.9",
   "description": "Runnable notifications worker server",
   "main": "index.js",
   "scripts": {
