@@ -34,7 +34,7 @@ describe('GitHubBotMessage', () => {
         state: 'running'
       }
       const md = GitHubBotMessage.render(gitInfo, ctx.instance)
-      assert.equal(md, 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-feature-1-hellonode-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/feature-1-hellonode)*</sub>')
+      assert.equal(md, '<!-- noClusterId -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-feature-1-hellonode-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/feature-1-hellonode)*</sub>')
       done()
     })
 
@@ -46,9 +46,9 @@ describe('GitHubBotMessage', () => {
         number: 33
       }
       ctx.instance.name = 'b17-node-starter-4-web'
-      const clusterInstance = Object.assign(ctx.instance, {inputClusterConfig: { clusterName: 'node-starter-4' }})
+      const clusterInstance = Object.assign(ctx.instance, {inputClusterConfig: { _id: 'sohail-cluster-id', clusterName: 'node-starter-4' }})
       const md = GitHubBotMessage.render(gitInfo, clusterInstance, [ { name: 'ga71a12-b17-node-starter-4-db', owner: { username: 'codenow' } } ])
-      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
+      let message = '<!-- sohail-cluster-id -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [web](http://ga71a12-b17-node-starter-4-web-staging-codenow.runnableapp.com), '
       message += '<img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-red.svg" '
       message += 'title="Failed" width="9" height="9"> [db](http://ga71a12-b17-node-starter-4-db-staging-codenow.runnableapp.com).'
