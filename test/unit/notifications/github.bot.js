@@ -471,12 +471,14 @@ describe('GitHubBot', function () {
           number: 2
         }
       ])
+      sinon.stub(GitHubBot.prototype, '_ensureNoDuplicates').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, '_upsertComment').yieldsAsync(null)
       done()
     })
 
     afterEach(function (done) {
       GitHub.prototype.listOpenPullRequestsForBranch.restore()
+      GitHubBot.prototype._ensureNoDuplicates.restore()
       GitHubBot.prototype._upsertComment.restore()
       done()
     })
