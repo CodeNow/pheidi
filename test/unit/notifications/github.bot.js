@@ -616,12 +616,14 @@ describe('GitHubBot', function () {
   })
   describe('#notifyOnUpdate', function () {
     beforeEach(function (done) {
+      sinon.stub(GitHubBot.prototype, '_ensureNoDuplicates').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, 'checkPrBotEnabledAndAcceptInvite').resolves()
       done()
     })
 
     afterEach(function (done) {
+      GitHubBot.prototype._ensureNoDuplicates.restore()
       GitHubBot.prototype._upsertComments.restore()
       GitHubBot.prototype.checkPrBotEnabledAndAcceptInvite.restore()
       done()
