@@ -34,7 +34,7 @@ describe('GitHubBotMessage', () => {
         state: 'running'
       }
       const md = GitHubBotMessage.render(gitInfo, ctx.instance)
-      assert.equal(md, '<!-- noClusterId -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-feature-1-hellonode-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/feature-1-hellonode)*</sub>')
+      assert.equal(md, '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-feature-1-hellonode-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/feature-1-hellonode)*</sub>')
       done()
     })
 
