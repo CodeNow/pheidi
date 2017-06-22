@@ -84,11 +84,11 @@ describe('GitHubBot', function () {
     beforeEach(function (done) {
       ctx.comments = [
         {
-          body: 'PR-2 is deployed',
+          body: '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nPR-2 is deployed',
           id: 2
         },
         {
-          body: 'PR-1 is deployed',
+          body: '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nPR-1 is deployed',
           id: 1
         }
       ]
@@ -178,7 +178,7 @@ describe('GitHubBot', function () {
   describe('#_upsertComment', function () {
     beforeEach(function (done) {
       ctx.comment = {
-        body: 'PR-2 is deployed to ' + ctx.instance.name,
+        body: '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nPR-2 is deployed to ' + ctx.instance.name,
         id: 2
       }
       sinon.stub(GitHub.prototype, 'findCommentsByUser').yieldsAsync(null, [ctx.comment])
@@ -321,7 +321,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
+      let message = '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [hellonode](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       message += '.\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/inst-1)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
@@ -352,7 +352,7 @@ describe('GitHubBot', function () {
         number: 2,
         state: 'running'
       }
-      let message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
+      let message = '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" '
       message += 'title="Running" width="9" height="9"> [hellonode](http://ga71a12-inst-1-staging-codenow.runnableapp.com)'
       message += '.\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/inst-1)*</sub>'
       githubBot._upsertComment(gitInfo, ctx.instance, [], function (error) {
@@ -412,7 +412,7 @@ describe('GitHubBot', function () {
     })
 
     it('should not do create comment if cache found', function (done) {
-      const message = 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-inst-1-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/inst-1)*</sub>'
+      const message = '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-inst-1-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/inst-1)*</sub>'
       tracker.get.returns(message)
       const githubBot = new GitHubBot('anton-token')
       const gitInfo = {
@@ -438,7 +438,7 @@ describe('GitHubBot', function () {
 
     it('should not update comment if comment did not change', function (done) {
       GitHub.prototype.findCommentsByUser.yieldsAsync(null, [{
-        body: 'Deployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-inst-1-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/inst-1)*</sub>',
+        body: '<!-- ' + process.env.NO_CLUSTER_ID_NAME + ' -->\nDeployed <img src="https://s3-us-west-1.amazonaws.com/runnable-design/status-green.svg" title="Running" width="9" height="9"> [hellonode](http://ga71a12-inst-1-staging-codenow.runnableapp.com).\n<sub>*[View on Runnable](https://web.runnable.dev/codenow/inst-1)*</sub>',
         id: 2
       }])
       const githubBot = new GitHubBot('anton-token')
@@ -471,12 +471,14 @@ describe('GitHubBot', function () {
           number: 2
         }
       ])
+      sinon.stub(GitHubBot.prototype, '_ensureNoDuplicates').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, '_upsertComment').yieldsAsync(null)
       done()
     })
 
     afterEach(function (done) {
       GitHub.prototype.listOpenPullRequestsForBranch.restore()
+      GitHubBot.prototype._ensureNoDuplicates.restore()
       GitHubBot.prototype._upsertComment.restore()
       done()
     })
@@ -616,12 +618,14 @@ describe('GitHubBot', function () {
   })
   describe('#notifyOnUpdate', function () {
     beforeEach(function (done) {
+      sinon.stub(GitHubBot.prototype, '_ensureNoDuplicates').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, '_upsertComments').yieldsAsync(null)
       sinon.stub(GitHubBot.prototype, 'checkPrBotEnabledAndAcceptInvite').resolves()
       done()
     })
 
     afterEach(function (done) {
+      GitHubBot.prototype._ensureNoDuplicates.restore()
       GitHubBot.prototype._upsertComments.restore()
       GitHubBot.prototype.checkPrBotEnabledAndAcceptInvite.restore()
       done()
